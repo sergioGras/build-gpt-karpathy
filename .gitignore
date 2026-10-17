@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Java / Maven
+target/
+
+# C / CMake
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+
+# Model artifacts and logs
+checkpoints/
+*.pt
+*.pth
+*.onnx
+logs/

@@ -18,7 +18,7 @@ The first checks and reduced experiments should run locally where practical. Rep
 
 ## Start here
 
-The project now has runnable scaffolds, an orientation notebook, and experiment configuration/provenance support. The GPT-2 model, tokenization, training, and inference-library integrations will be implemented through the lessons.
+The project has runnable scaffolds, an orientation notebook, and three prepared lessons. [Lesson 1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) compares the first tutorial's tiny model with GPT-2. [Lesson 2](python/notebooks/lesson_02_gpt2_tokenization.ipynb) explores byte-level BPE, token IDs, and document boundaries. [Lesson 3](python/notebooks/lesson_03_token_streams_and_batches.ipynb) turns separate train and validation token streams into shifted next-token batches.
 
 From the repository root on Windows:
 
@@ -27,9 +27,15 @@ From the repository root on Windows:
 .\scripts\run-gpt2.ps1 -Language python
 .\scripts\run-gpt2.ps1 -Language c
 .\scripts\run-gpt2.ps1 -Language java
+.\scripts\run-gpt2.ps1 -Language c -Action lesson
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Part 2
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 2 -Part 1
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 2
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 3
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 3 -Part 2
 ```
 
-Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. Use **Terminal → Run Task → GPT-2: Inspect scaffold** to select a language. Open [the orientation notebook](python/notebooks/00_project_tour.ipynb) and select **Karpathy GPT-2 (project .venv)** as the kernel. If you keep the whole repository open, select this new kernel explicitly; the repository's default interpreter still belongs to GPT-1.
+Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **Terminal → Run Task → GPT-2: Run Lesson 1/2/3** runs the selected C or Java companion. Open [the orientation notebook](python/notebooks/00_project_tour.ipynb), then Lessons [1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb), [2](python/notebooks/lesson_02_gpt2_tokenization.ipynb), and [3](python/notebooks/lesson_03_token_streams_and_batches.ipynb), and select **Karpathy GPT-2 (project .venv)** as the kernel. Python setup installs `tiktoken`; the first C Lesson 2 run downloads a pinned Windows library release and verifies its SHA-256. Python and C may also fetch and cache GPT-2's vocabulary data on first use. Java resolves JTokkit through Maven. These lessons need no model weights or GPU. If you keep the whole repository open, select the GPT-2 kernel explicitly; the repository's default interpreter still belongs to GPT-1.
 
 ## Project map
 
@@ -45,11 +51,32 @@ Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. Us
 | `runs/` | Generated settings/provenance and, later, training outputs; ignored by Git |
 | `../scripts/` | Setup/run helpers, with remote execution to be added when needed |
 
-For a playful dataset or architecture idea, begin with the [experiment guide](experiments/README.md). The same settings and run records will support both tutorial baselines and your own variations. C and Java currently inspect matching dimension presets; the Python CLI owns experiment JSON until later lessons add language-specific integrations.
+| Lesson 1 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. Compare dimensions | Notebook, section 1 | [architecture_lesson.c](c/src/architecture_lesson.c) | [ArchitectureLesson.java](java/src/main/java/learning/karpathy/gpt2/ArchitectureLesson.java) |
+| 2. Calculate head width and attention shapes | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Estimate GPT-2 parameter count | Notebook, section 3 | [parameter formula](c/src/model_config.c) | [parameter formula](java/src/main/java/learning/karpathy/gpt2/ModelConfig.java) |
+
+| Lesson 2 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. Encode text and inspect IDs | Notebook, sections 1–2 | [tokenizer_lesson.c](c/src/tokenizer_lesson.c), step 1 | [TokenizerLesson.java](java/src/main/java/learning/karpathy/gpt2/TokenizerLesson.java), step 1 |
+| 2. Compare spaces and UTF-8 text | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Add an end-of-text boundary | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
+
+| Lesson 3 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. Keep train and validation streams separate | Notebook, section 1 | [batching_lesson.c](c/src/batching_lesson.c), step 1 | [BatchingLesson.java](java/src/main/java/learning/karpathy/gpt2/BatchingLesson.java), step 1 |
+| 2. Shift token windows into inputs and targets | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Advance and wrap the loader cursor | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
+
+For a playful dataset or architecture idea, begin with the [experiment guide](experiments/README.md). The same settings and run records will support both tutorial baselines and your own variations. C and Java now use GPT-2-compatible tokenizer libraries for matching ordinary-text token IDs; the Python CLI owns experiment JSON until later lessons add language-specific integrations.
 
 ## References
 
 - [Karpathy's GPT-2 reproduction video](https://www.youtube.com/watch?v=l8pRSuU81PU)
 - [Upstream `build-nanogpt` source and README](build-nanogpt/README.md)
 - [GPT-2 model card](https://huggingface.co/openai-community/gpt2)
+- [OpenAI tiktoken](https://github.com/openai/tiktoken)
+- [JTokkit](https://github.com/knuddelsgmbh/jtokkit)
+- [tiktoken-c](https://github.com/kojix2/tiktoken-c)
 - [Project remote-compute plan](../docs/remote-compute-plan.md)

@@ -63,4 +63,4 @@ The guided path has fourteen lessons. Python covers training the complete small 
 
 ## Tutorial 2 — GPT-2 reproduction
 
-The next track follows Karpathy's [*Let's reproduce GPT-2 (124M)*](https://www.youtube.com/watch?v=l8pRSuU81PU). Its upstream code checkout is in [gpt-2/build-nanogpt](gpt-2/build-nanogpt/README.md); the guided lessons will be documented alongside it in [gpt-2/README.md](gpt-2/README.md).
+The next track follows Karpathy's [*Let's reproduce GPT-2 (124M)*](https://www.youtube.com/watch?v=l8pRSuU81PU). Its upstream code checkout is in [gpt-2/build-nanogpt](gpt-2/build-nanogpt/README.md). The guided track starts with the [project tour and Lesson 1](gpt-2/README.md), then follows with [GPT-2 tokenization](gpt-2/python/notebooks/lesson_02_gpt2_tokenization.ipynb) and [token streams and batches](gpt-2/python/notebooks/lesson_03_token_streams_and_batches.ipynb) before moving into model implementation, training, evaluation, and experiments.

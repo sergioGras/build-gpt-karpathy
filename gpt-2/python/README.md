@@ -2,7 +2,7 @@
 
 The notebooks are the learning entry point. Reusable code lives in `src/gpt2_lab`, so notebooks and command-line experiments use the same implementation. The editable installation makes source changes available without reinstalling.
 
-Start with [00_project_tour.ipynb](notebooks/00_project_tour.ipynb). It checks the environment, reads an experiment, and compares tiny dimensions with GPT-2 dimensions. This is an orientation notebook; the first model lesson comes next.
+Start with [00_project_tour.ipynb](notebooks/00_project_tour.ipynb), then continue with [Lesson 1: From GPT-1 to GPT-2](notebooks/lesson_01_gpt1_to_gpt2.ipynb), [Lesson 2: GPT-2 tokenization](notebooks/lesson_02_gpt2_tokenization.ipynb), and [Lesson 3: Token streams and batches](notebooks/lesson_03_token_streams_and_batches.ipynb). Lesson 2 uses `tiktoken` for the GPT-2 vocabulary; Lesson 3 splits the toy documents and forms shifted next-token batches.
 
 ## Setup on Windows
 
@@ -13,7 +13,7 @@ From the repository root:
 .\scripts\run-gpt2.ps1 -Language python
 ```
 
-In VS Code choose **Karpathy GPT-2 (project .venv)** as the notebook kernel, or select `gpt-2/python/.venv/Scripts/python.exe` from Python Environments. This environment is separate from GPT-1. The setup script installs this package and notebook support; model libraries will be added when a lesson needs them.
+In VS Code choose **Karpathy GPT-2 (project .venv)** as the notebook kernel, or select `gpt-2/python/.venv/Scripts/python.exe` from Python Environments. This environment is separate from GPT-1. The setup script installs this package, notebook support, and the tokenizer used in Lesson 2. Model and training libraries will be added when a lesson needs them.
 
 ## Direct commands and Linux
 

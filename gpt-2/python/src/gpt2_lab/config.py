@@ -35,6 +35,11 @@ class ModelConfig:
     def gpt2_124m(cls) -> "ModelConfig":
         return cls(50257, 1024, 12, 12, 768)
 
+    @classmethod
+    def tutorial1_tiny(cls) -> "ModelConfig":
+        # Tutorial 1's final Tiny Shakespeare run: 65 characters, two 16-wide blocks.
+        return cls(65, 16, 2, 2, 16)
+
 
 @dataclass(frozen=True)
 class DatasetConfig:

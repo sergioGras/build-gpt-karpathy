@@ -6,7 +6,9 @@ The source material is [Karpathy's reference checkout](../build-nanogpt/README.m
 
 | Phase | What we will demonstrate |
 | --- | --- |
-| Bridge from GPT-1 | Identify GPT-2's differences, trace dimensions, and inspect parameter organization |
+| Bridge from Tutorial 1 | [Lesson 1](../python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) identifies GPT-2's differences, traces dimensions, and estimates parameter count |
+| Tokenization | [Lesson 2](../python/notebooks/lesson_02_gpt2_tokenization.ipynb) compares byte-level BPE behavior in Python, C, and Java and introduces document boundaries |
+| Token data pipeline | [Lesson 3](../python/notebooks/lesson_03_token_streams_and_batches.ipynb) separates train/validation streams, shifts token windows into next-token batches, and explains loader cursor movement |
 | Reconstruct and verify | Build the decoder, load pretrained weights, and compare logits against a known implementation |
 | Establish training correctness | Overfit a batch, inspect initialization and weight tying, then train on fresh batches |
 | Prepare datasets | Explain byte-level BPE, document boundaries, shards, and validation splits |
@@ -19,6 +21,8 @@ These phases can span several lessons. Each lesson links the notebook, reusable 
 ## Language goals
 
 Python leads the complete model and pretraining workflow. C and Java aim to run actual pretrained GPT-2 inference through suitable libraries and to explore training in small, readable examples. Check library compatibility with a working prototype before committing to it. Manual primitive examples should explain a concept without turning this course into an autodiff-engine project.
+
+For Lesson 2, Python uses OpenAI `tiktoken` 0.14.x, Java uses JTokkit 1.1.0's `r50k_base` encoding, and the C companion uses `tiktoken-c` 0.9.1. The C release is installed locally by a checksum-verified script and remains outside version control. These wrappers let us compare the same IDs while briefly examining each language's abstractions and memory-ownership rules.
 
 Notebook cells introduce ideas; reusable modules expose the operations that scripts need. Avoid importing a final training script with top-level execution. Add functionality as its lesson arrives rather than implementing the rest of the course in advance.
 

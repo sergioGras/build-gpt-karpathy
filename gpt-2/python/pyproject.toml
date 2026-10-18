@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-notebooks = ["ipykernel>=6.29,<8"]
+notebooks = ["ipykernel>=6.29,<8", "tiktoken>=0.14,<0.15"]
 
 [project.scripts]
 gpt2-lab = "gpt2_lab.cli:main"

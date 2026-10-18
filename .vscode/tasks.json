@@ -80,6 +80,79 @@
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    {
+      "label": "GPT-2: Run Lesson 1",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/run-gpt2.ps1",
+        "-Language",
+        "${input:gpt2LessonLanguage}",
+        "-Action",
+        "lesson",
+        "-Part",
+        "all"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "GPT-2: Run Lesson 2",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/run-gpt2.ps1",
+        "-Language",
+        "${input:gpt2Lesson2Language}",
+        "-Action",
+        "lesson",
+        "-Lesson",
+        "2",
+        "-Part",
+        "all"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "GPT-2: Run Lesson 3",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/run-gpt2.ps1",
+        "-Language",
+        "${input:gpt2Lesson3Language}",
+        "-Action",
+        "lesson",
+        "-Lesson",
+        "3",
+        "-Part",
+        "all"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     }
   ],
   "inputs": [
@@ -142,6 +215,36 @@
         "java"
       ],
       "default": "python"
+    },
+    {
+      "id": "gpt2LessonLanguage",
+      "type": "pickString",
+      "description": "GPT-2 Lesson 1 language",
+      "options": [
+        "c",
+        "java"
+      ],
+      "default": "c"
+    },
+    {
+      "id": "gpt2Lesson2Language",
+      "type": "pickString",
+      "description": "GPT-2 Lesson 2 language",
+      "options": [
+        "c",
+        "java"
+      ],
+      "default": "c"
+    },
+    {
+      "id": "gpt2Lesson3Language",
+      "type": "pickString",
+      "description": "GPT-2 Lesson 3 language",
+      "options": [
+        "c",
+        "java"
+      ],
+      "default": "c"
     }
   ]
 }

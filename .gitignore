@@ -31,5 +31,6 @@ logs/
 runs/
 /gpt-2/data/local/
 /gpt-2/data/cache/
+/gpt-2/c/.deps/
 # Independently cloned reference; see gpt-2/docs/reference-source.md.
 /gpt-2/build-nanogpt/

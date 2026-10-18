@@ -18,7 +18,7 @@ The first checks and reduced experiments should run locally where practical. Onc
 
 ## Start here
 
-The project has runnable scaffolds, an orientation notebook, and six prepared lessons. [Lesson 1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) compares the first tutorial's tiny model with GPT-2. [Lesson 2](python/notebooks/lesson_02_gpt2_tokenization.ipynb) explores byte-level BPE, token IDs, and document boundaries. [Lesson 3](python/notebooks/lesson_03_token_streams_and_batches.ipynb) turns separate train and validation token streams into shifted next-token batches. [Lesson 4](python/notebooks/lesson_04_token_and_position_embeddings.ipynb) follows those IDs into token and position embeddings. [Lesson 5](python/notebooks/lesson_05_causal_self_attention.ipynb) builds causal self-attention. [Lesson 6](python/notebooks/lesson_06_decoder_block.ipynb) combines normalization, attention, a position-wise MLP, and two residual paths into a GPT-2 decoder block.
+The project has runnable scaffolds, an orientation notebook, and seven prepared lessons. [Lesson 1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) compares the first tutorial's tiny model with GPT-2. [Lesson 2](python/notebooks/lesson_02_gpt2_tokenization.ipynb) explores byte-level BPE, token IDs, and document boundaries. [Lesson 3](python/notebooks/lesson_03_token_streams_and_batches.ipynb) turns separate train and validation token streams into shifted next-token batches. [Lesson 4](python/notebooks/lesson_04_token_and_position_embeddings.ipynb) follows those IDs into token and position embeddings. [Lesson 5](python/notebooks/lesson_05_causal_self_attention.ipynb) builds causal self-attention. [Lesson 6](python/notebooks/lesson_06_decoder_block.ipynb) combines normalization, attention, a position-wise MLP, and two residual paths into a GPT-2 decoder block. [Lesson 7](python/notebooks/lesson_07_tiny_gpt_forward.ipynb) connects a tiny model end to end and produces next-token logits.
 
 From the repository root on Windows:
 
@@ -39,9 +39,11 @@ From the repository root on Windows:
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 5 -Part 2
 .\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 6
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 6 -Part 2
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 7
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 7 -Part 3
 ```
 
-Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **Terminal → Run Task → GPT-2: Run Lesson 1–6** runs the selected C or Java companion. Open [the orientation notebook](python/notebooks/00_project_tour.ipynb), then Lessons [1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb), [2](python/notebooks/lesson_02_gpt2_tokenization.ipynb), [3](python/notebooks/lesson_03_token_streams_and_batches.ipynb), [4](python/notebooks/lesson_04_token_and_position_embeddings.ipynb), [5](python/notebooks/lesson_05_causal_self_attention.ipynb), and [6](python/notebooks/lesson_06_decoder_block.ipynb), and select **Karpathy GPT-2 (project .venv)** as the kernel. Python setup installs `tiktoken` and the CPU build of PyTorch. The first C Lesson 2 run downloads a pinned Windows library release and verifies its SHA-256. Python and C may also fetch and cache GPT-2's vocabulary data on first use. Java resolves JTokkit through Maven. These lessons need no model weights or GPU. If you keep the whole repository open, select the GPT-2 kernel explicitly; the repository's default interpreter still belongs to GPT-1.
+Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **Terminal → Run Task → GPT-2: Run Lesson 1–7** runs the selected C or Java companion. Open [the orientation notebook](python/notebooks/00_project_tour.ipynb), then Lessons [1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb), [2](python/notebooks/lesson_02_gpt2_tokenization.ipynb), [3](python/notebooks/lesson_03_token_streams_and_batches.ipynb), [4](python/notebooks/lesson_04_token_and_position_embeddings.ipynb), [5](python/notebooks/lesson_05_causal_self_attention.ipynb), [6](python/notebooks/lesson_06_decoder_block.ipynb), and [7](python/notebooks/lesson_07_tiny_gpt_forward.ipynb), and select **Karpathy GPT-2 (project .venv)** as the kernel. Python setup installs `tiktoken` and the CPU build of PyTorch. The first C Lesson 2 run downloads a pinned Windows library release and verifies its SHA-256. Python and C may also fetch and cache GPT-2's vocabulary data on first use. Java resolves JTokkit through Maven. These lessons need no model weights or GPU. If you keep the whole repository open, select the GPT-2 kernel explicitly; the repository's default interpreter still belongs to GPT-1.
 
 ## Project map
 
@@ -93,6 +95,12 @@ Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **
 | 1. LayerNorm, causal attention, and first residual | Notebook, section 1 | [block_lesson.c](c/src/block_lesson.c), step 1 | [BlockLesson.java](java/src/main/java/learning/karpathy/gpt2/BlockLesson.java), step 1 |
 | 2. LayerNorm, 4C MLP, GELU, and second residual | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
 | 3. Inspect and verify the complete decoder-block output | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
+
+| Lesson 7 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. Embed token IDs and add positions | Notebook, section 1 | [gpt_forward_lesson.c](c/src/gpt_forward_lesson.c), step 1 | [GptForwardLesson.java](java/src/main/java/learning/karpathy/gpt2/GptForwardLesson.java), step 1 |
+| 2. Pass the residual stream through a decoder block | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Apply final LayerNorm and tied output projection | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
 
 For a playful dataset or architecture idea, begin with the [experiment guide](experiments/README.md). The same settings and run records will support both tutorial baselines and your own variations. C and Java now use GPT-2-compatible tokenizer libraries for matching ordinary-text token IDs; the Python CLI owns experiment JSON until later lessons add language-specific integrations.
 

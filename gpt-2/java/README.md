@@ -14,6 +14,7 @@ From the repository root on Windows:
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 4 -Part 2
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 5 -Part 2
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 6
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 7
 ```
 
 The helper checks `JAVA_HOME`, `PATH`, and the existing local JDK installation folders. Use `-JavaHome 'C:\path\to\jdk'` for an explicit JDK 25 or later.
@@ -41,5 +42,7 @@ Lesson 4 is [EmbeddingsLesson.java](src/main/java/learning/karpathy/gpt2/Embeddi
 Lesson 5 is [AttentionLesson.java](src/main/java/learning/karpathy/gpt2/AttentionLesson.java). It computes the same Q/K/V projections, scaled scores, causal mask, softmax weights, and context vectors as Python and C. Small methods separate each matrix operation, and a final check confirms that a future token cannot affect an earlier output.
 
 Lesson 6 is [BlockLesson.java](src/main/java/learning/karpathy/gpt2/BlockLesson.java). It combines LayerNorm, causal attention and its residual, then a 4C position-wise MLP with tanh-approximate GELU and its residual. Small methods name the matrix operations while keeping the arithmetic visible; the fixed toy weights match Python and C. Select `all`, `1`, `2`, or `3` with `-Part`.
+
+Lesson 7 is [GptForwardLesson.java](src/main/java/learning/karpathy/gpt2/GptForwardLesson.java). It runs token and position lookup, one decoder block, final LayerNorm, and the tied output projection that yields four logits per position. Java arrays omit the leading singleton batch dimension for readability. The last-position argmax is a toy choice from untrained weights. Select `all`, `1`, `2`, or `3` with `-Part`.
 
 Read [Main.java](src/main/java/learning/karpathy/gpt2/Main.java) and [ModelConfig.java](src/main/java/learning/karpathy/gpt2/ModelConfig.java) for the original scaffold presets. Java does not read experiment JSON yet. We will investigate libraries for actual pretrained GPT-2 inference before adopting a larger dependency.

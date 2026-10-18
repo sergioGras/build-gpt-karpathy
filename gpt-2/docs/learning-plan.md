@@ -12,6 +12,7 @@ The source material is [Karpathy's reference checkout](../build-nanogpt/README.m
 | Model inputs | [Lesson 4](../python/notebooks/lesson_04_token_and_position_embeddings.ipynb) traces learned token and position table lookups and the initial residual stream |
 | Causal attention | [Lesson 5](../python/notebooks/lesson_05_causal_self_attention.ipynb) builds Q/K/V, scaled scores, the future-token mask, softmax weights, and value mixing |
 | Decoder block | [Lesson 6](../python/notebooks/lesson_06_decoder_block.ipynb) combines LayerNorm, causal attention, the 4C MLP with GELU, and the two residual updates |
+| Complete forward pass | [Lesson 7](../python/notebooks/lesson_07_tiny_gpt_forward.ipynb) connects embeddings, a decoder block, final LayerNorm, tied output weights, and next-token logits |
 | Reconstruct and verify | Progress from embeddings through attention and the decoder, then load pretrained weights and compare logits against a known implementation |
 | Establish training correctness | Overfit a batch, inspect initialization and weight tying, then train on fresh batches |
 | Prepare datasets | Explain byte-level BPE, document boundaries, shards, and validation splits |

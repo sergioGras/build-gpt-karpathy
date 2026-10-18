@@ -14,6 +14,7 @@ From the repository root on Windows:
 .\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 4 -Part 2
 .\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 5 -Part 2
 .\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 6
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 7
 ```
 
 Or from this folder, with CMake, Ninja, and a C compiler on `PATH`:
@@ -41,5 +42,7 @@ Lesson 4 is [embeddings_lesson.c](src/embeddings_lesson.c). A tiny shared table 
 Lesson 5 is [attention_lesson.c](src/attention_lesson.c). It uses the first residual-stream example from Lesson 4 to show Q/K/V projections, scaled dot products, the causal mask, stable softmax, and value mixing. C arrays and loops keep each operation visible; the final check changes the last input and verifies that position 0 cannot see it.
 
 Lesson 6 is [block_lesson.c](src/block_lesson.c). It adds LayerNorm before causal attention, the first residual update, a per-token MLP that expands from C to 4C with tanh-approximate GELU, and the second residual update. The same small input and fixed MLP weights are used in Python and Java. Select `all`, `1`, `2`, or `3` with `-Part` to focus on a stage.
+
+Lesson 7 is [gpt_forward_lesson.c](src/gpt_forward_lesson.c). It follows token IDs through token and position lookup, one decoder block, final LayerNorm, and a weight-tied projection to four vocabulary logits. The leading singleton batch dimension is omitted from the C arrays to keep the loops direct; printed shapes include it. The final-position argmax is only a toy choice, not generated language. Select `all`, `1`, `2`, or `3` with `-Part`.
 
 Read [main.c](src/main.c), [model_config.h](include/model_config.h), and [model_config.c](src/model_config.c) for the original scaffold presets. C does not read experiment JSON yet. The tokenizer package is an early prototype; numerical and inference libraries will still be checked with small working examples before they become part of the course.

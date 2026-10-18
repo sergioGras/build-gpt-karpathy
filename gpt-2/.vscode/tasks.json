@@ -205,6 +205,31 @@
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    {
+      "label": "GPT-2: Run Lesson 7",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/../scripts/run-gpt2.ps1",
+        "-Language",
+        "${input:gpt2Lesson7Language}",
+        "-Action",
+        "lesson",
+        "-Lesson",
+        "7",
+        "-Part",
+        "all"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     }
   ],
   "inputs": [
@@ -273,6 +298,16 @@
       "id": "gpt2Lesson6Language",
       "type": "pickString",
       "description": "GPT-2 Lesson 6 language",
+      "options": [
+        "c",
+        "java"
+      ],
+      "default": "c"
+    },
+    {
+      "id": "gpt2Lesson7Language",
+      "type": "pickString",
+      "description": "GPT-2 Lesson 7 language",
       "options": [
         "c",
         "java"

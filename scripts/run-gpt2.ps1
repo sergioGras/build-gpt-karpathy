@@ -5,7 +5,7 @@ param(
     [string]$Action = 'plan',
     [ValidateSet('all', '1', '2', '3', '1-2', '2-3', '1-3')]
     [string]$Part = 'all',
-    [ValidateSet('1', '2', '3', '4', '5', '6')]
+    [ValidateSet('1', '2', '3', '4', '5', '6', '7')]
     [string]$Lesson = '1',
     [string]$Config,
     [ValidateSet('tiny', 'gpt2')]
@@ -33,6 +33,9 @@ if ($Lesson -eq '5' -and $Part -notin @('all', '1', '2', '3')) {
 if ($Lesson -eq '6' -and $Part -notin @('all', '1', '2', '3')) {
     throw 'GPT-2 Lesson 6 parts are all, 1, 2, or 3.'
 }
+if ($Lesson -eq '7' -and $Part -notin @('all', '1', '2', '3')) {
+    throw 'GPT-2 Lesson 7 parts are all, 1, 2, or 3.'
+}
 if ($Language -eq 'python') {
     if ($Model -ne 'tiny') { throw '-Model applies to C/Java. Python reads its model dimensions from -Config.' }
     if ($Action -eq 'lesson') {
@@ -43,6 +46,7 @@ if ($Language -eq 'python') {
             '4' { Join-Path $tutorialRoot 'python\notebooks\lesson_04_token_and_position_embeddings.ipynb' }
             '5' { Join-Path $tutorialRoot 'python\notebooks\lesson_05_causal_self_attention.ipynb' }
             '6' { Join-Path $tutorialRoot 'python\notebooks\lesson_06_decoder_block.ipynb' }
+            '7' { Join-Path $tutorialRoot 'python\notebooks\lesson_07_tiny_gpt_forward.ipynb' }
         }
         Write-Host "Open this Python notebook in VS Code and select the GPT-2 project kernel:`n$notebook"
         return
@@ -88,6 +92,7 @@ if ($Language -eq 'c') {
                     '4' { Join-Path $tutorialRoot 'c\build\gpt2_embeddings_lesson.exe' }
                     '5' { Join-Path $tutorialRoot 'c\build\gpt2_attention_lesson.exe' }
                     '6' { Join-Path $tutorialRoot 'c\build\gpt2_block_lesson.exe' }
+                    '7' { Join-Path $tutorialRoot 'c\build\gpt2_forward_lesson.exe' }
                 }
                 if (-not (Test-Path $lessonProgram)) {
                     if ($Lesson -eq '2') {
@@ -152,6 +157,7 @@ try {
                 '4' { 'learning.karpathy.gpt2.EmbeddingsLesson' }
                 '5' { 'learning.karpathy.gpt2.AttentionLesson' }
                 '6' { 'learning.karpathy.gpt2.BlockLesson' }
+                '7' { 'learning.karpathy.gpt2.GptForwardLesson' }
             }
             $classpath = 'target\classes'
             if ($Lesson -eq '2') {

@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 notebooks = ["ipykernel>=6.29,<8", "tiktoken>=0.14,<0.15"]
+ml = ["numpy>=2.1,<3", "torch>=2.14,<2.15"]
 
 [project.scripts]
 gpt2-lab = "gpt2_lab.cli:main"

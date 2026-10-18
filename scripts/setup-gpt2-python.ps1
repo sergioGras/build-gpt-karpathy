@@ -13,6 +13,10 @@ if (-not (Test-Path $venvPython)) {
 }
 & $venvPython -m pip install -e "${pythonProject}[notebooks]"
 if ($LASTEXITCODE -ne 0) { throw 'Could not install the GPT-2 Python project.' }
+& $venvPython -m pip install 'numpy>=2.1,<3'
+if ($LASTEXITCODE -ne 0) { throw 'Could not install NumPy for tensor interoperability.' }
+& $venvPython -m pip install --index-url 'https://download.pytorch.org/whl/cpu' -e "${pythonProject}[ml]"
+if ($LASTEXITCODE -ne 0) { throw 'Could not install the CPU version of PyTorch.' }
 & $venvPython -m ipykernel install --user --name karpathy-gpt2 --display-name 'Karpathy GPT-2 (project .venv)'
 if ($LASTEXITCODE -ne 0) { throw 'Could not register the GPT-2 notebook kernel.' }
 Write-Host "Ready: $venvPython"

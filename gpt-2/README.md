@@ -8,17 +8,17 @@ This track follows Andrej Karpathy's [*Let's reproduce GPT-2 (124M)*](https://ww
 
 The reference remains an independent checkout and is ignored by the outer repository. Its revision and fresh-clone instructions are recorded in [docs/reference-source.md](docs/reference-source.md).
 
-We will keep the same learning approach as Tutorial 1: understand the Python behavior first, make tensor shapes and data flow visible, then build readable C and Java counterparts where they clarify the concepts. Libraries are welcome when they remove routine boilerplate; comments and small examples can expose the underlying operations. We will organize each language in a conventional project structure as the lessons take shape.
+We will keep the same learning approach as Tutorial 1: understand the Python behavior first, make tensor shapes and data flow visible, then build readable C and Java counterparts where they clarify the concepts. Libraries are welcome when they remove routine boilerplate; comments and small examples can expose the underlying operations. We will organize each language in a conventional project structure as the lessons take shape. The goal is to finish a measured GPT-2 124M-scale training run, then reuse the workflow for experiments on other datasets and representations.
 
 ## Planned progression
 
 We will begin by surveying the reference code and tracing the data and model configuration before writing a training run. Then we can build lessons around GPT-2 tokenization and data preparation, the GPT-2 decoder and its parameter shapes, training and validation, checkpointing, and text generation. Lesson boundaries will follow the concepts rather than copying the video or source file line for line.
 
-The first checks and reduced experiments should run locally where practical. Reproducing large-scale GPT-2 training is a separate compute experiment: before renting a GPU, we will define the exact configuration, runtime and spend limit, outputs, and cleanup plan. The project-level [remote-compute plan](../docs/remote-compute-plan.md) describes that workflow.
+The first checks and reduced experiments should run locally where practical. Once the small training loop works, a short, capped GPU run will test the SSH workflow, metrics, and checkpoint retrieval. The later 124M/10B-token run will use measured throughput and a separate spend limit. See the [GPT-2 remote-compute plan](docs/remote-compute-plan.md) for the staged lab and data-experiment workflow, and the [project-level remote-compute plan](../docs/remote-compute-plan.md) for the earlier RunPod playbook patterns.
 
 ## Start here
 
-The project has runnable scaffolds, an orientation notebook, and three prepared lessons. [Lesson 1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) compares the first tutorial's tiny model with GPT-2. [Lesson 2](python/notebooks/lesson_02_gpt2_tokenization.ipynb) explores byte-level BPE, token IDs, and document boundaries. [Lesson 3](python/notebooks/lesson_03_token_streams_and_batches.ipynb) turns separate train and validation token streams into shifted next-token batches.
+The project has runnable scaffolds, an orientation notebook, and six prepared lessons. [Lesson 1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) compares the first tutorial's tiny model with GPT-2. [Lesson 2](python/notebooks/lesson_02_gpt2_tokenization.ipynb) explores byte-level BPE, token IDs, and document boundaries. [Lesson 3](python/notebooks/lesson_03_token_streams_and_batches.ipynb) turns separate train and validation token streams into shifted next-token batches. [Lesson 4](python/notebooks/lesson_04_token_and_position_embeddings.ipynb) follows those IDs into token and position embeddings. [Lesson 5](python/notebooks/lesson_05_causal_self_attention.ipynb) builds causal self-attention. [Lesson 6](python/notebooks/lesson_06_decoder_block.ipynb) combines normalization, attention, a position-wise MLP, and two residual paths into a GPT-2 decoder block.
 
 From the repository root on Windows:
 
@@ -33,9 +33,15 @@ From the repository root on Windows:
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 2
 .\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 3
 .\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 3 -Part 2
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 4
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 4 -Part 3
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 5
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 5 -Part 2
+.\scripts\run-gpt2.ps1 -Language c -Action lesson -Lesson 6
+.\scripts\run-gpt2.ps1 -Language java -Action lesson -Lesson 6 -Part 2
 ```
 
-Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **Terminal → Run Task → GPT-2: Run Lesson 1/2/3** runs the selected C or Java companion. Open [the orientation notebook](python/notebooks/00_project_tour.ipynb), then Lessons [1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb), [2](python/notebooks/lesson_02_gpt2_tokenization.ipynb), and [3](python/notebooks/lesson_03_token_streams_and_batches.ipynb), and select **Karpathy GPT-2 (project .venv)** as the kernel. Python setup installs `tiktoken`; the first C Lesson 2 run downloads a pinned Windows library release and verifies its SHA-256. Python and C may also fetch and cache GPT-2's vocabulary data on first use. Java resolves JTokkit through Maven. These lessons need no model weights or GPU. If you keep the whole repository open, select the GPT-2 kernel explicitly; the repository's default interpreter still belongs to GPT-1.
+Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **Terminal → Run Task → GPT-2: Run Lesson 1–6** runs the selected C or Java companion. Open [the orientation notebook](python/notebooks/00_project_tour.ipynb), then Lessons [1](python/notebooks/lesson_01_gpt1_to_gpt2.ipynb), [2](python/notebooks/lesson_02_gpt2_tokenization.ipynb), [3](python/notebooks/lesson_03_token_streams_and_batches.ipynb), [4](python/notebooks/lesson_04_token_and_position_embeddings.ipynb), [5](python/notebooks/lesson_05_causal_self_attention.ipynb), and [6](python/notebooks/lesson_06_decoder_block.ipynb), and select **Karpathy GPT-2 (project .venv)** as the kernel. Python setup installs `tiktoken` and the CPU build of PyTorch. The first C Lesson 2 run downloads a pinned Windows library release and verifies its SHA-256. Python and C may also fetch and cache GPT-2's vocabulary data on first use. Java resolves JTokkit through Maven. These lessons need no model weights or GPU. If you keep the whole repository open, select the GPT-2 kernel explicitly; the repository's default interpreter still belongs to GPT-1.
 
 ## Project map
 
@@ -47,6 +53,7 @@ Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **
 | [experiments/](experiments/README.md) | Configurations, custom datasets, and run preparation |
 | [data/](data/README.md) | Small public samples and ignored local/cache locations |
 | [docs/learning-plan.md](docs/learning-plan.md) | Milestones, language goals, and completion criteria |
+| [docs/remote-compute-plan.md](docs/remote-compute-plan.md) | Early GPU pilot, GPT-2-scale run, and custom-data lab workflow |
 | [docs/summary transcript.txt](docs/summary%20transcript.txt) | Supplied transcript summary |
 | `runs/` | Generated settings/provenance and, later, training outputs; ignored by Git |
 | `../scripts/` | Setup/run helpers, with remote execution to be added when needed |
@@ -68,6 +75,24 @@ Open `gpt-2/` as a VS Code folder for its own interpreter and CMake settings. **
 | 1. Keep train and validation streams separate | Notebook, section 1 | [batching_lesson.c](c/src/batching_lesson.c), step 1 | [BatchingLesson.java](java/src/main/java/learning/karpathy/gpt2/BatchingLesson.java), step 1 |
 | 2. Shift token windows into inputs and targets | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
 | 3. Advance and wrap the loader cursor | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
+
+| Lesson 4 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. Read token IDs and position IDs | Notebook, section 1 | [embeddings_lesson.c](c/src/embeddings_lesson.c), step 1 | [EmbeddingsLesson.java](java/src/main/java/learning/karpathy/gpt2/EmbeddingsLesson.java), step 1 |
+| 2. Look up token vectors | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Add position vectors into the residual stream | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
+
+| Lesson 5 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. Project the residual stream into Q, K, and V | Notebook, section 1 | [attention_lesson.c](c/src/attention_lesson.c), step 1 | [AttentionLesson.java](java/src/main/java/learning/karpathy/gpt2/AttentionLesson.java), step 1 |
+| 2. Scale scores, apply the causal mask, and normalize | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Mix values and verify causal behavior | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
+
+| Lesson 6 step | Python | C | Java |
+| --- | --- | --- | --- |
+| 1. LayerNorm, causal attention, and first residual | Notebook, section 1 | [block_lesson.c](c/src/block_lesson.c), step 1 | [BlockLesson.java](java/src/main/java/learning/karpathy/gpt2/BlockLesson.java), step 1 |
+| 2. LayerNorm, 4C MLP, GELU, and second residual | Notebook, section 2 | Same file, step 2 | Same file, step 2 |
+| 3. Inspect and verify the complete decoder-block output | Notebook, section 3 | Same file, step 3 | Same file, step 3 |
 
 For a playful dataset or architecture idea, begin with the [experiment guide](experiments/README.md). The same settings and run records will support both tutorial baselines and your own variations. C and Java now use GPT-2-compatible tokenizer libraries for matching ordinary-text token IDs; the Python CLI owns experiment JSON until later lessons add language-specific integrations.
 

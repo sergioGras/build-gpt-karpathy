@@ -9,12 +9,17 @@ The source material is [Karpathy's reference checkout](../build-nanogpt/README.m
 | Bridge from Tutorial 1 | [Lesson 1](../python/notebooks/lesson_01_gpt1_to_gpt2.ipynb) identifies GPT-2's differences, traces dimensions, and estimates parameter count |
 | Tokenization | [Lesson 2](../python/notebooks/lesson_02_gpt2_tokenization.ipynb) compares byte-level BPE behavior in Python, C, and Java and introduces document boundaries |
 | Token data pipeline | [Lesson 3](../python/notebooks/lesson_03_token_streams_and_batches.ipynb) separates train/validation streams, shifts token windows into next-token batches, and explains loader cursor movement |
-| Reconstruct and verify | Build the decoder, load pretrained weights, and compare logits against a known implementation |
+| Model inputs | [Lesson 4](../python/notebooks/lesson_04_token_and_position_embeddings.ipynb) traces learned token and position table lookups and the initial residual stream |
+| Causal attention | [Lesson 5](../python/notebooks/lesson_05_causal_self_attention.ipynb) builds Q/K/V, scaled scores, the future-token mask, softmax weights, and value mixing |
+| Decoder block | [Lesson 6](../python/notebooks/lesson_06_decoder_block.ipynb) combines LayerNorm, causal attention, the 4C MLP with GELU, and the two residual updates |
+| Reconstruct and verify | Progress from embeddings through attention and the decoder, then load pretrained weights and compare logits against a known implementation |
 | Establish training correctness | Overfit a batch, inspect initialization and weight tying, then train on fresh batches |
 | Prepare datasets | Explain byte-level BPE, document boundaries, shards, and validation splits |
 | Record experiments | Run a small training experiment with metrics, samples, and checkpoints; test resume |
-| Understand GPU execution | Measure selected precision/attention/compilation changes and gradient accumulation |
-| Evaluate and scale | Explain completion scoring, run bounded evaluation, and study distributed training |
+| Use the GPU lab | After local training checks pass, validate SSH, metrics, checkpoint retrieval, and cleanup with a short capped run |
+| Train GPT-2 124M | Complete a measured from-scratch run on the tutorial's FineWeb-Edu 10B-token sample, with loss curves, samples, and evaluation |
+| Experiment with data | Reuse the run workflow for smaller multilingual, numerical, and financial-sequence experiments, recording representation choices and provenance |
+| Optimize and evaluate | Measure selected precision/attention/compilation changes, gradient accumulation, and evaluation; keep large distributed runs optional |
 
 These phases can span several lessons. Each lesson links the notebook, reusable implementation, C/Java counterpart, run instructions, references, and a small exercise. Use shared inputs and numeric tolerances when comparing implementations; sampled text alone is not a numerical correctness check.
 
@@ -34,4 +39,4 @@ Maintain a known baseline, then let a new configuration describe a variation. Ma
 
 Distinguish configuration inspection, reduced local checks, short GPU training experiments, and full pretraining reproduction. Matching the GPT-2 architecture, loading a pretrained checkpoint, and training a model from random weights are different achievements. Label results with the configuration and data actually used.
 
-The learning path can demonstrate and explain each topic with bounded experiments. A full billions-of-tokens reproduction is an additional run with its own budget and outputs. Follow the [remote-compute plan](../../docs/remote-compute-plan.md) when that stage is reached; the scaffold does not provision resources.
+The learning path aims to complete a measured GPT-2 124M-scale run, not only explain its architecture. Follow the [GPT-2 remote-compute plan](remote-compute-plan.md) for the earlier GPU pilot, the full-run estimate, and repeatable custom-data experiments. A paid run will use a concrete spend cap and cleanup plan; the scaffold does not provision resources.

@@ -5,7 +5,7 @@ param(
     [string]$Action = 'plan',
     [ValidateSet('all', '1', '2', '3', '1-2', '2-3', '1-3')]
     [string]$Part = 'all',
-    [ValidateSet('1', '2', '3')]
+    [ValidateSet('1', '2', '3', '4', '5', '6')]
     [string]$Lesson = '1',
     [string]$Config,
     [ValidateSet('tiny', 'gpt2')]
@@ -24,6 +24,15 @@ if ($Lesson -eq '2' -and $Part -notin @('all', '1', '2', '3')) {
 if ($Lesson -eq '3' -and $Part -notin @('all', '1', '2', '3')) {
     throw 'GPT-2 Lesson 3 parts are all, 1, 2, or 3.'
 }
+if ($Lesson -eq '4' -and $Part -notin @('all', '1', '2', '3')) {
+    throw 'GPT-2 Lesson 4 parts are all, 1, 2, or 3.'
+}
+if ($Lesson -eq '5' -and $Part -notin @('all', '1', '2', '3')) {
+    throw 'GPT-2 Lesson 5 parts are all, 1, 2, or 3.'
+}
+if ($Lesson -eq '6' -and $Part -notin @('all', '1', '2', '3')) {
+    throw 'GPT-2 Lesson 6 parts are all, 1, 2, or 3.'
+}
 if ($Language -eq 'python') {
     if ($Model -ne 'tiny') { throw '-Model applies to C/Java. Python reads its model dimensions from -Config.' }
     if ($Action -eq 'lesson') {
@@ -31,6 +40,9 @@ if ($Language -eq 'python') {
             '1' { Join-Path $tutorialRoot 'python\notebooks\lesson_01_gpt1_to_gpt2.ipynb' }
             '2' { Join-Path $tutorialRoot 'python\notebooks\lesson_02_gpt2_tokenization.ipynb' }
             '3' { Join-Path $tutorialRoot 'python\notebooks\lesson_03_token_streams_and_batches.ipynb' }
+            '4' { Join-Path $tutorialRoot 'python\notebooks\lesson_04_token_and_position_embeddings.ipynb' }
+            '5' { Join-Path $tutorialRoot 'python\notebooks\lesson_05_causal_self_attention.ipynb' }
+            '6' { Join-Path $tutorialRoot 'python\notebooks\lesson_06_decoder_block.ipynb' }
         }
         Write-Host "Open this Python notebook in VS Code and select the GPT-2 project kernel:`n$notebook"
         return
@@ -73,6 +85,9 @@ if ($Language -eq 'c') {
                     '1' { Join-Path $tutorialRoot 'c\build\gpt2_architecture_lesson.exe' }
                     '2' { Join-Path $tutorialRoot 'c\build\gpt2_tokenizer_lesson.exe' }
                     '3' { Join-Path $tutorialRoot 'c\build\gpt2_batching_lesson.exe' }
+                    '4' { Join-Path $tutorialRoot 'c\build\gpt2_embeddings_lesson.exe' }
+                    '5' { Join-Path $tutorialRoot 'c\build\gpt2_attention_lesson.exe' }
+                    '6' { Join-Path $tutorialRoot 'c\build\gpt2_block_lesson.exe' }
                 }
                 if (-not (Test-Path $lessonProgram)) {
                     if ($Lesson -eq '2') {
@@ -134,6 +149,9 @@ try {
                 'learning.karpathy.gpt2.TokenizerLesson'
                 }
                 '3' { 'learning.karpathy.gpt2.BatchingLesson' }
+                '4' { 'learning.karpathy.gpt2.EmbeddingsLesson' }
+                '5' { 'learning.karpathy.gpt2.AttentionLesson' }
+                '6' { 'learning.karpathy.gpt2.BlockLesson' }
             }
             $classpath = 'target\classes'
             if ($Lesson -eq '2') {

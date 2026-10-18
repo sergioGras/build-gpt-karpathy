@@ -54,3 +54,5 @@ This lab is a future capability, not an implemented feature. Provider selection,
 The first tutorial follows Karpathy's *Let's build GPT: from scratch, in code, spelled out*, progressing from Tiny Shakespeare and character encoding to a bigram model, causal self-attention, and a decoder-only Transformer.
 
 The reference notebook is [gpt-1/gpt_dev.ipynb](gpt-1/gpt_dev.ipynb).
+
+To run the C or Java version a step at a time in VS Code, use **Terminal → Run Task → Run tutorial lesson**. The [lesson guide](gpt-1/README.md#run-lessons-by-step) maps each step to the notebook and both projects.

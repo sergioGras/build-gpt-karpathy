@@ -1,0 +1,4 @@
+{
+    "cmake.sourceDirectory": "C:/SERGIO/PILLARS OF LIFE (LOCAL)/KNOWLADGE HEALTH/COURSES/ANDREJ KARPATHY/build-gpt-karpathy/gpt-1/c",
+    "python.defaultInterpreterPath": "${workspaceFolder}/python/.venv/Scripts/python.exe"
+}

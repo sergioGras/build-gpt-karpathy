@@ -20,12 +20,34 @@ public final class TinyShakespeareDataset {
         return new TinyShakespeareDataset(source, text);
     }
 
+    public static Path findDefaultPath() throws IOException {
+        Path workingDirectory = Path.of("").toAbsolutePath().normalize();
+        Path[] candidates = {
+                workingDirectory.resolve(Path.of("data", "input.txt")),
+                workingDirectory.resolve(Path.of("gpt-1", "data", "input.txt")),
+                workingDirectory.resolve(Path.of("..", "data", "input.txt"))
+        };
+
+        for (Path candidate : candidates) {
+            Path resolved = candidate.normalize();
+            if (Files.isRegularFile(resolved)) {
+                return resolved;
+            }
+        }
+
+        throw new IOException("Could not find gpt-1/data/input.txt from " + workingDirectory);
+    }
+
     public Path source() {
         return source;
     }
 
     public int characterCount() {
         return text.length();
+    }
+
+    public String text() {
+        return text;
     }
 
     public String preview(int characterLimit) {

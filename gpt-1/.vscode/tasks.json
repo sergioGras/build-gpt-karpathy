@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run tutorial lesson",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/../scripts/run-lesson.ps1",
+        "-Lesson", "${input:lessonNumber}",
+        "-Language", "${input:lessonLanguage}",
+        "-Part", "${input:lessonPart}"
+      ],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "lessonNumber",
+      "type": "pickString",
+      "description": "Tutorial lesson",
+      "options": ["1", "2"],
+      "default": "1"
+    },
+    {
+      "id": "lessonLanguage",
+      "type": "pickString",
+      "description": "Language to run",
+      "options": ["c", "java"],
+      "default": "c"
+    },
+    {
+      "id": "lessonPart",
+      "type": "pickString",
+      "description": "Lesson steps to show",
+      "options": ["all", "1", "2", "3", "1-2", "1-3"],
+      "default": "all"
+    }
+  ]
+}

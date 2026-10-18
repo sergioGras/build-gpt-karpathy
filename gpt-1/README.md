@@ -60,7 +60,23 @@ The Python notebooks use concept-sized cells. C and Java use conventional source
 | 3 | Mask future positions and normalize the remaining scores with softmax | `masked_fill` and `F.softmax` | `softmax_rows` | `softmaxRows` |
 | 4 | Use query-key similarity to make input-dependent attention weights | query/key projections and weighted values | query/key projections and weighted values | query/key projections and weighted values |
 
-In VS Code, open this repository or the `gpt-1` folder and choose **Terminal → Run Task → Run tutorial lesson**. Select lesson `1` through `6`, then `c` or `java`, followed by the steps to show. Lessons 1–5 have three steps; Lesson 6 has four, so its menu also accepts `4`, `1-4`, `2-4`, and `3-4`. A selected step runs any calculations it needs while hiding earlier output.
+### Lesson 7: Why attention scores are scaled
+
+| Step | What it does | Python | C | Java |
+| --- | --- | --- | --- | --- |
+| 1 | Measure query-key score variance at increasing head sizes | exact sign-vector enumeration in [`lesson_07_attention_scaling.ipynb`](python/lesson_07_attention_scaling.ipynb) | sign-vector enumeration | sign-vector enumeration |
+| 2 | Compare softmax at ordinary and exaggerated score scales | `F.softmax` and entropy | stable softmax and entropy | stable softmax and entropy |
+| 3 | Divide concrete query-key scores by the square root of head size | scaled logits and weights | scaled logits and weights | scaled logits and weights |
+
+### Lesson 8: Layer normalization
+
+| Step | What it does | Python | C | Java |
+| --- | --- | --- | --- | --- |
+| 1 | Inspect per-token statistics across channels | `mean` and `var` in [`lesson_08_layer_norm.ipynb`](python/lesson_08_layer_norm.ipynb) | `row_statistics` in `layer_norm_main.c` | `rowStatistics` in `LayerNormLesson` |
+| 2 | Center and rescale each token vector | explicit formula using PyTorch tensors | loops over channel vectors | loops over `double[]` channel vectors |
+| 3 | Apply a scale and shift per channel | manual formula checked against `nn.LayerNorm` | `gamma * x_hat + beta` | `gamma * x_hat + beta` |
+
+In VS Code, open this repository or the `gpt-1` folder and choose **Terminal → Run Task → Run tutorial lesson**. Select lesson `1` through `8`, then `c` or `java`, followed by the steps to show. Lessons 1–5 and 7–8 have three steps; Lesson 6 has four, so its menu also accepts `4`, `1-4`, `2-4`, and `3-4`. A selected step runs any calculations it needs while hiding earlier output.
 
 The same workflow is available from a PowerShell terminal at the repository root:
 
@@ -71,10 +87,13 @@ The same workflow is available from a PowerShell terminal at the repository root
 .\scripts\run-lesson.ps1 -Lesson 4 -Language c -Part 2
 .\scripts\run-lesson.ps1 -Lesson 5 -Language java -Part all
 .\scripts\run-lesson.ps1 -Lesson 6 -Language c -Part 4
+.\scripts\run-lesson.ps1 -Lesson 7 -Language java -Part all
+.\scripts\run-lesson.ps1 -Lesson 8 -Language c -Part all
+.\scripts\run-lesson.ps1 -Lesson 8 -Language java -Part all
 ```
 
 The script uses CMake and the Maven Wrapper. It finds this machine's MSYS2 CMake and JDK 25 installations, or uses tools already on `PATH`/`JAVA_HOME`. If Java 25 is installed elsewhere, pass `-JavaHome "C:\path\to\jdk-25"`.
 
 Python iterates Unicode code points, Java's `char` represents UTF-16 code units, and this C lesson maps bytes. The shared corpus currently contains ASCII only, so all three versions assign the same vocabulary order and token IDs. Unicode-aware C tokenization is a later extension if the lessons need it.
 
-Lesson 3 adds the CPU build of PyTorch for tensor slicing, random index selection, and stacking windows into batches. Lesson 4 uses PyTorch's embedding, cross-entropy, and sampling operations; Lesson 5 adds autograd and AdamW. Lesson 6 introduces self-attention with four small vectors, so the calculations in all three languages run locally on a CPU. The full attention/transformer training stage will determine when a rented GPU lab is useful.
+Lesson 3 adds the CPU build of PyTorch for tensor slicing, random index selection, and stacking windows into batches. Lesson 4 uses PyTorch's embedding, cross-entropy, and sampling operations; Lesson 5 adds autograd and AdamW. Lessons 6 and 7 study self-attention and score scaling; Lesson 8 covers per-token LayerNorm with tiny CPU examples. The full attention/transformer training stage will determine when a rented GPU lab is useful.

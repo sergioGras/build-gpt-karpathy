@@ -49,6 +49,8 @@ GPU execution in each language depends on the chosen numerical library and its G
 
 This lab is a future capability, not an implemented feature. Provider selection, dashboards, checkpoint conventions, and automation will be developed when the lessons need them.
 
+The [remote-compute plan](docs/remote-compute-plan.md) adapts a RunPod workflow playbook to this tutorial and maps the next architecture lessons to a bounded first GPU experiment.
+
 ## First tutorial
 
 The first tutorial follows Karpathy's *Let's build GPT: from scratch, in code, spelled out*, progressing from Tiny Shakespeare and character encoding to a bigram model, causal self-attention, and a decoder-only Transformer.

@@ -3,10 +3,10 @@ param(
     [ValidateSet('c', 'java')]
     [string]$Language,
 
-    [ValidateSet('1', '2', '3', '4', '5')]
+    [ValidateSet('1', '2', '3', '4', '5', '6')]
     [string]$Lesson = '1',
 
-    [ValidateSet('all', '1', '2', '3', '1-2', '1-3')]
+    [ValidateSet('all', '1', '2', '3', '4', '1-2', '1-3', '1-4', '2-4', '3-4')]
     [string]$Part = 'all',
 
     [string]$JavaHome
@@ -14,6 +14,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
+
+if ($Lesson -ne '6' -and $Part -in @('4', '1-4', '2-4', '3-4')) {
+    throw 'Parts 4 and the extended ranges are available only for Lesson 6.'
+}
 
 if ($Language -eq 'c') {
     $cmakeCommand = Get-Command cmake -ErrorAction SilentlyContinue
@@ -34,6 +38,7 @@ if ($Language -eq 'c') {
             '3' { 'gpt1_batches' }
             '4' { 'gpt1_bigram' }
             '5' { 'gpt1_bigram_training' }
+            '6' { 'gpt1_attention_math' }
         }
         & $cmake --build --preset default --target $target
         if ($LASTEXITCODE -ne 0) { throw 'C build failed.' }
@@ -98,6 +103,7 @@ try {
         '3' { 'learning.karpathy.gpt1.NextTokenBatchLesson' }
         '4' { 'learning.karpathy.gpt1.BigramLanguageModelLesson' }
         '5' { 'learning.karpathy.gpt1.BigramTrainingLesson' }
+        '6' { 'learning.karpathy.gpt1.SelfAttentionMathLesson' }
     }
     & (Join-Path $jdk 'bin\java.exe') -cp target\classes $className $Part
     if ($LASTEXITCODE -ne 0) { throw 'Java lesson failed.' }

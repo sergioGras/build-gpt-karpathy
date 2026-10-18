@@ -51,7 +51,16 @@ The Python notebooks use concept-sized cells. C and Java use conventional source
 | 2 | Train for 100 mini-batches and compare loss | PyTorch autograd and `torch.optim.AdamW` | explicit gradient and AdamW in `bigram_model.c` | explicit gradient and AdamW in `BigramLanguageModel.trainBatch` |
 | 3 | Generate text from the trained model | `generate` and `torch.multinomial` | `bigram_model_generate` | `BigramLanguageModel.generate` |
 
-In VS Code, open this repository or the `gpt-1` folder and choose **Terminal → Run Task → Run tutorial lesson**. Select lesson `1` through `5`, then `c` or `java`, followed by the steps to show. `all` shows all three steps, `1-2` shows the first two, and `3` shows only the last step. The program performs earlier work needed for the selected step but hides its output; Lesson 5 silently trains before showing step 3.
+### Lesson 6: The mathematical trick in self-attention
+
+| Step | What it does | Python | C | Java |
+| --- | --- | --- | --- | --- |
+| 1 | Average each vector with its visible past using loops | loop in [`lesson_06_self_attention_math.ipynb`](python/lesson_06_self_attention_math.ipynb) | `average_visible_past` | `averageVisiblePast` |
+| 2 | Express the causal average as lower-triangular matrix multiplication | `torch.tril` and `@` | `make_causal_average_weights` and `apply_weights` | `causalAverageWeights` and `applyWeights` |
+| 3 | Mask future positions and normalize the remaining scores with softmax | `masked_fill` and `F.softmax` | `softmax_rows` | `softmaxRows` |
+| 4 | Use query-key similarity to make input-dependent attention weights | query/key projections and weighted values | query/key projections and weighted values | query/key projections and weighted values |
+
+In VS Code, open this repository or the `gpt-1` folder and choose **Terminal → Run Task → Run tutorial lesson**. Select lesson `1` through `6`, then `c` or `java`, followed by the steps to show. Lessons 1–5 have three steps; Lesson 6 has four, so its menu also accepts `4`, `1-4`, `2-4`, and `3-4`. A selected step runs any calculations it needs while hiding earlier output.
 
 The same workflow is available from a PowerShell terminal at the repository root:
 
@@ -61,10 +70,11 @@ The same workflow is available from a PowerShell terminal at the repository root
 .\scripts\run-lesson.ps1 -Lesson 3 -Language java -Part all
 .\scripts\run-lesson.ps1 -Lesson 4 -Language c -Part 2
 .\scripts\run-lesson.ps1 -Lesson 5 -Language java -Part all
+.\scripts\run-lesson.ps1 -Lesson 6 -Language c -Part 4
 ```
 
 The script uses CMake and the Maven Wrapper. It finds this machine's MSYS2 CMake and JDK 25 installations, or uses tools already on `PATH`/`JAVA_HOME`. If Java 25 is installed elsewhere, pass `-JavaHome "C:\path\to\jdk-25"`.
 
 Python iterates Unicode code points, Java's `char` represents UTF-16 code units, and this C lesson maps bytes. The shared corpus currently contains ASCII only, so all three versions assign the same vocabulary order and token IDs. Unicode-aware C tokenization is a later extension if the lessons need it.
 
-Lesson 3 adds the CPU build of PyTorch for tensor slicing, random index selection, and stacking windows into batches. Lesson 4 uses PyTorch's embedding, cross-entropy, and sampling operations; C and Java use standard arrays and show the same table and tensor shapes directly. Lesson 5 adds PyTorch autograd and AdamW, while C and Java calculate the gradient and optimizer update explicitly. The 100-step bigram training run is small enough for a CPU; GPU setup is not needed.
+Lesson 3 adds the CPU build of PyTorch for tensor slicing, random index selection, and stacking windows into batches. Lesson 4 uses PyTorch's embedding, cross-entropy, and sampling operations; Lesson 5 adds autograd and AdamW. Lesson 6 introduces self-attention with four small vectors, so the calculations in all three languages run locally on a CPU. The full attention/transformer training stage will determine when a rented GPU lab is useful.

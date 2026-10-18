@@ -3,7 +3,7 @@ param(
     [ValidateSet('c', 'java')]
     [string]$Language,
 
-    [ValidateSet('1', '2')]
+    [ValidateSet('1', '2', '3', '4', '5')]
     [string]$Lesson = '1',
 
     [ValidateSet('all', '1', '2', '3', '1-2', '1-3')]
@@ -28,7 +28,13 @@ if ($Language -eq 'c') {
     try {
         & $cmake --preset default
         if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
-        $target = if ($Lesson -eq '1') { 'gpt1_c' } else { 'gpt1_tokenization' }
+        $target = switch ($Lesson) {
+            '1' { 'gpt1_c' }
+            '2' { 'gpt1_tokenization' }
+            '3' { 'gpt1_batches' }
+            '4' { 'gpt1_bigram' }
+            '5' { 'gpt1_bigram_training' }
+        }
         & $cmake --build --preset default --target $target
         if ($LASTEXITCODE -ne 0) { throw 'C build failed.' }
         $executable = Join-Path (Get-Location) "build\$target.exe"
@@ -86,10 +92,12 @@ Push-Location (Join-Path $repoRoot 'gpt-1\java')
 try {
     & .\mvnw.cmd compile
     if ($LASTEXITCODE -ne 0) { throw 'Java build failed.' }
-    $className = if ($Lesson -eq '1') {
-        'learning.karpathy.gpt1.Main'
-    } else {
-        'learning.karpathy.gpt1.CharacterTokenizationLesson'
+    $className = switch ($Lesson) {
+        '1' { 'learning.karpathy.gpt1.Main' }
+        '2' { 'learning.karpathy.gpt1.CharacterTokenizationLesson' }
+        '3' { 'learning.karpathy.gpt1.NextTokenBatchLesson' }
+        '4' { 'learning.karpathy.gpt1.BigramLanguageModelLesson' }
+        '5' { 'learning.karpathy.gpt1.BigramTrainingLesson' }
     }
     & (Join-Path $jdk 'bin\java.exe') -cp target\classes $className $Part
     if ($LASTEXITCODE -ne 0) { throw 'Java lesson failed.' }

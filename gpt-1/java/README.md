@@ -20,8 +20,9 @@ From the repository root:
 ```powershell
 .\scripts\run-lesson.ps1 -Lesson 2 -Language java -Part 1-2
 .\scripts\run-lesson.ps1 -Lesson 2 -Language java -Part 3
+.\scripts\run-lesson.ps1 -Lesson 5 -Language java -Part all
 ```
 
-Or choose **Terminal → Run Task → Run tutorial lesson** in VS Code. Select lesson `1` for corpus reading or lesson `2` for character tokenization. Each lesson accepts `all`, `1`, `2`, `3`, `1-2`, and `1-3`; one selected step runs its prerequisites without showing their output.
+Or choose **Terminal → Run Task → Run tutorial lesson** in VS Code. Select lesson `1` for corpus reading, `2` for character tokenization, `3` for next-token batches, `4` for the untrained bigram model, or `5` for bigram training. Each lesson accepts `all`, `1`, `2`, `3`, `1-2`, and `1-3`; one selected step runs its prerequisites without showing their output.
 
-Lesson 2's entry point is `CharacterTokenizationLesson`. It uses `CharacterVocabulary` to assign IDs in sorted character order, encode strings into `int[]`, and decode them with a `StringBuilder`. The vocabulary class keeps the mapping separate from the lesson's print-and-experiment flow, following normal Java project structure while keeping the operations visible. Compare it with the [Python notebook](../python/lesson_02_character_tokenization.ipynb) and [C implementation](../c/README.md).
+Lesson 2's entry point is `CharacterTokenizationLesson`. Lesson 3's `NextTokenBatchLesson` uses `int[][]` arrays for batches. Lesson 4 starts at `BigramLanguageModelLesson` and uses `BigramLanguageModel` to look up next-token logits, calculate stable cross-entropy, and sample an untrained continuation. Lesson 5 starts at `BigramTrainingLesson`; its `trainBatch` method accumulates the softmax-cross-entropy gradient for the selected lookup-table rows and performs an AdamW update. This makes the operations hidden behind PyTorch autograd and the optimizer visible in ordinary Java arrays. Compare it with the [Python notebook](../python/lesson_05_train_bigram.ipynb) and [C implementation](../c/README.md).

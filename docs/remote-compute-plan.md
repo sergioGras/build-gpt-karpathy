@@ -8,8 +8,11 @@ The first tutorial's next source-code pieces assemble the ideas already introduc
 
 1. Build a causal self-attention head with learned query, key, and value projections.
 2. Combine heads, add the feed-forward network, residual connections, and the pre-normalized Transformer block.
-3. Add token and position embeddings, stack blocks, produce next-token logits, and generate text.
-4. Train the small character-level model on Tiny Shakespeare, recording train/validation loss and generated samples.
+3. Add token and position embeddings as the input representation.
+4. Assemble the decoder model from stacked blocks, produce next-token logits, and generate text.
+5. Train the small character-level model on Tiny Shakespeare, recording train/validation loss and generated samples.
+
+The first full-model training lesson uses a reduced two-layer, 16-channel configuration and 100 optimizer updates. It runs locally on CPU; a GPU is reserved for a later scale comparison after the learner has inspected the training curve and measured a larger run.
 
 These are small teaching examples. The reference notebook uses a short context, a 64-channel embedding, four heads, and four layers. We should first run the end-to-end model on the local CPU and measure it. A GPU is useful when it gives a clear comparison or shortens an experiment, but it is not a prerequisite for understanding the architecture.
 

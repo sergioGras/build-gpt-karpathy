@@ -1,5 +1,6 @@
 ipykernel>=6.29,<8
 numpy>=2.0,<3
+matplotlib>=3.11,<4
 # CPU wheel for Windows/Linux; choose a matching wheel for macOS or GPU use.
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.14.1+cpu

@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+*.egg-info/
 
 # Java / Maven
 target/
@@ -25,3 +26,10 @@ checkpoints/
 *.pth
 *.onnx
 logs/
+
+# GPT-2 experiment outputs and private/local datasets
+runs/
+/gpt-2/data/local/
+/gpt-2/data/cache/
+# Independently cloned reference; see gpt-2/docs/reference-source.md.
+/gpt-2/build-nanogpt/

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "tiny-playground",
+  "description": "Scaffold example using a small fictional corpus. Inspects settings only; no trainer or tokenizer exists yet.",
+  "model": {
+    "vocab_size": 256,
+    "context_length": 32,
+    "n_layer": 2,
+    "n_head": 4,
+    "n_embd": 32
+  },
+  "dataset": {
+    "path": "../../data/samples/playground.txt",
+    "encoding": "utf-8"
+  },
+  "training": {
+    "seed": 1337,
+    "device": "cpu",
+    "batch_size": 2,
+    "max_steps": 20,
+    "learning_rate": 0.0003
+  }
+}

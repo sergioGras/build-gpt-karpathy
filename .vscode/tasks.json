@@ -7,14 +7,79 @@
       "command": "powershell.exe",
       "args": [
         "-NoProfile",
-        "-ExecutionPolicy", "Bypass",
-        "-File", "${workspaceFolder}/scripts/run-lesson.ps1",
-        "-Lesson", "${input:lessonNumber}",
-        "-Language", "${input:lessonLanguage}",
-        "-Part", "${input:lessonPart}"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/run-lesson.ps1",
+        "-Lesson",
+        "${input:lessonNumber}",
+        "-Language",
+        "${input:lessonLanguage}",
+        "-Part",
+        "${input:lessonPart}"
       ],
       "problemMatcher": [],
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "GPT-2: Set up Python",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/setup-gpt2-python.ps1"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "GPT-2: Inspect scaffold",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/run-gpt2.ps1",
+        "-Language",
+        "${input:gpt2Language}"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "GPT-2: Prepare sample experiment",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/run-gpt2.ps1",
+        "-Language",
+        "python",
+        "-Action",
+        "prepare-run"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     }
   ],
   "inputs": [
@@ -22,22 +87,61 @@
       "id": "lessonNumber",
       "type": "pickString",
       "description": "Tutorial lesson",
-      "options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"],
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13"
+      ],
       "default": "1"
     },
     {
       "id": "lessonLanguage",
       "type": "pickString",
       "description": "Language to run",
-      "options": ["c", "java"],
+      "options": [
+        "c",
+        "java"
+      ],
       "default": "c"
     },
     {
       "id": "lessonPart",
       "type": "pickString",
       "description": "Steps to show (step 4 applies to lessons 6 and 9 through 13)",
-      "options": ["all", "1", "2", "3", "4", "1-2", "1-3", "1-4", "2-4", "3-4"],
+      "options": [
+        "all",
+        "1",
+        "2",
+        "3",
+        "4",
+        "1-2",
+        "1-3",
+        "1-4",
+        "2-4",
+        "3-4"
+      ],
       "default": "all"
+    },
+    {
+      "id": "gpt2Language",
+      "type": "pickString",
+      "description": "GPT-2 scaffold language",
+      "options": [
+        "python",
+        "c",
+        "java"
+      ],
+      "default": "python"
     }
   ]
 }

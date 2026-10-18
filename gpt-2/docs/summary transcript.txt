@@ -1,0 +1,782 @@
+# Building GPT-2 from Scratch — Andrej Karpathy
+
+Detailed technical summary of the Zero to Hero tutorial · GPT-2 (124M) reproduction and training optimization
+
+## 1. Overview and objectives
+
+The tutorial demonstrates how to reproduce OpenAI's GPT-2 124-million-parameter language model from scratch using PyTorch, and progressively optimize its training until it achieves performance comparable to or better than the original GPT-2 checkpoint on selected evaluations.
+
+The main objectives are to:
+
+1. Implement the complete GPT-2 architecture without relying on high-level model implementations.
+2. Verify correctness by loading OpenAI's pretrained GPT-2 weights.
+3. Initialize the same architecture randomly and train it using next-token prediction.
+4. Optimize GPU utilization and training throughput.
+5. Reproduce important GPT-2/GPT-3 training hyperparameters.
+6. Scale training from one GPU to multiple GPUs.
+7. Train on a real-world text dataset and evaluate against existing models.
+
+Central lesson: Reproducing a language model requires more than implementing a Transformer. Data processing, initialization, numerical precision, memory access, optimization, hardware utilization, and evaluation all influence the final result.
+
+## 2. Understanding the GPT-2 architecture
+
+### 2.1 Model configuration
+
+GPT-2 was released in 2019 as a family of decoder-only Transformer models with different parameter counts.
+
+The tutorial focuses on the smallest model:
+
+| Hyperparameter               | GPT-2 124M    |
+| ---------------------------- | ------------- |
+| Parameters                   | \~124 million |
+| Transformer layers           | 12            |
+| Attention heads per layer    | 12            |
+| Embedding dimension          | 768           |
+| Dimension per attention head | 64            |
+| Context length               | 1,024 tokens  |
+| Vocabulary size              | 50,257        |
+| MLP hidden dimension         | 3,072         |
+
+GPT-2 uses autoregressive language modeling: given a sequence of tokens, it predicts the next token using only preceding tokens.
+
+The vocabulary comes from GPT-2's byte-level BPE tokenizer, consisting of 256 byte tokens, 50,000 merges, and one special end-of-text token.
+
+### 2.2 The GPT-2 processing pipeline
+
+Input token IDs
+
+Shape: (B, T)
+
+Token embeddings
+
+WTE
+
+Position embeddings
+
+WPE
+
+Add embeddings
+
+Transformer block
+
+× 12
+
+LayerNorm → Causal Multi-Head Attention → Residual addition
+
+LayerNorm → MLP (GELU) → Residual addition
+
+Final LayerNorm
+
+Language modeling head
+
+Projects 768 → 50,257 logits
+
+Next-token probability distribution
+
+There are three especially important architectural properties.
+
+Decoder-only design: Unlike the original Transformer, GPT-2 has no encoder and no cross-attention. It uses masked self-attention so that a token cannot access future tokens.
+
+Pre-normalization: GPT-2 applies LayerNorm before attention and MLP operations, rather than after them.
+
+Residual connections: The model maintains an additive residual stream through all Transformer blocks, helping gradients propagate through deep networks.
+
+### 2.3 Why pre-normalization matters
+
+A GPT-2 Transformer block implements:
+
+\\[ x_1=x+\operatorname{Attention}(\operatorname{LN}\_1(x)) \\]
+
+\\[ x_2=x_1+\operatorname{MLP}(\operatorname{LN}\_2(x_1)) \\]
+
+Each operation adds its output to the existing representation rather than replacing it.
+
+During backpropagation, addition allows gradients to flow directly through the residual connection. This creates a relatively unobstructed gradient pathway from the output to the input.
+
+The residual stream acts as a shared representation that each block iteratively refines.
+
+Karpathy provides a useful conceptual interpretation:
+
+- Attention is communication: Tokens exchange information through weighted aggregation.
+- MLP is computation: Each token independently processes the information available in its representation.
+
+A Transformer can therefore be viewed as repeated communication and computation stages.
+
+### 2.4 Multi-head causal self-attention
+
+Each input representation is linearly projected into three vectors:
+
+- Query (Q): what information the current token seeks.
+- Key (K): what information another token offers for matching.
+- Value (V): the information that can be aggregated.
+
+Scaled dot-product attention is:
+
+\\[ \operatorname{Attention}(Q,K,V)= \operatorname{softmax}\left( \frac{QK^\top}{\sqrt{d_k}}+M \right)V \\]
+
+Here \\(M\\) is the causal mask, which prevents attention to future positions.
+
+GPT-2 uses 12 attention heads, each operating over 64 dimensions. The outputs are concatenated and projected back to the 768-dimensional residual stream.
+
+The implementation combines query, key and value projections into one linear operation, then uses tensor reshaping and transposing to calculate attention across batches and heads in parallel.
+
+This is mathematically equivalent to implementing each attention head separately but considerably more efficient in PyTorch.
+
+### 2.5 The MLP and GELU activation
+
+The feed-forward network expands the hidden representation from 768 to 3,072 dimensions, applies a nonlinearity, and projects it back to 768:
+
+\\[ \operatorname{MLP}(x)= W_2\operatorname{GELU}(W_1x+b_1)+b_2 \\]
+
+GPT-2 uses the approximate GELU activation based on `tanh`.
+
+Unlike ReLU, GELU has a smooth transition around zero and avoids an exactly flat negative region.
+
+Karpathy uses the approximate formulation because it matches the original GPT-2 implementation, although he notes that the approximation is largely a historical artifact of earlier numerical-library performance limitations.
+
+## 3. Implementing and validating GPT-2 in PyTorch
+
+Rather than using the original TensorFlow implementation, Karpathy uses Hugging Face Transformers to load the pretrained GPT-2 model and access its weights.
+
+The implementation uses PyTorch modules such as `nn.Embedding`, `nn.Linear`, `nn.LayerNorm`, `nn.ModuleList`, and `nn.ModuleDict`, while matching the original parameter names.
+
+### 3.1 Loading pretrained weights
+
+The validation procedure is:
+
+1. Load the Hugging Face `gpt2` model, which corresponds to GPT-2 124M.
+2. Inspect its `state_dict`, containing the model's parameter tensors.
+3. Implement an equivalent GPT-2 architecture from scratch.
+4. Transfer the pretrained tensors into the custom model.
+5. Transpose specific weight matrices where the original TensorFlow-based representation differs from PyTorch.
+6. Exclude non-parameter buffers such as stored causal masks.
+7. Generate text and verify that the results are sensible.
+
+Matching model weights establishes that the custom architecture can represent the original GPT-2 model.
+
+Generation through Hugging Face's high-level pipeline did not produce precisely identical samples because of differences in generation settings. However, directly comparing the underlying model implementations confirmed that the weights and computations were correctly transferred.
+
+Practical lesson: Before training a complex architecture from scratch, validate it against a known pretrained implementation. This separates architectural bugs from optimization problems.
+
+### 3.2 How text generation works
+
+Autoregressive generation repeatedly predicts and appends one token.
+
+Given input token IDs \\(x\\):
+
+1. Run the model to produce logits of shape `(B, T, vocab_size)`.
+2. Select the logits corresponding to the final sequence position.
+3. Apply softmax to obtain next-token probabilities.
+4. Optionally restrict sampling to the top \\(k\\) tokens.
+5. Sample the next token and append it to the sequence.
+6. Repeat until reaching the desired output length.
+
+The tutorial uses top-k sampling with k = 50, restricting the model to the 50 most likely next tokens before sampling. This reduces the likelihood of choosing implausible tokens.
+
+For inference, `torch.no_grad()` prevents PyTorch from storing intermediate tensors for gradient computation.
+
+The basic generation implementation recomputes the entire sequence for every new token. It is correct but inefficient compared with more advanced methods such as caching previously calculated keys and values.
+
+## 4. Preparing training data and the training loop
+
+### 4.1 Starting with Tiny Shakespeare
+
+Before training on billions of tokens, Karpathy uses the Tiny Shakespeare dataset, containing approximately one million characters and around 338,000 GPT-2 tokens.
+
+This is a debugging dataset, not the final training corpus.
+
+The goal is to verify that:
+
+- Tokenization works.
+- Batches are shaped correctly.
+- The model produces logits of the expected dimensions.
+- The loss function behaves correctly.
+- Backpropagation and parameter updates work.
+
+### 4.2 Creating input and target sequences
+
+The model learns through next-token prediction.
+
+For a token sequence:
+
+`[10, 20, 30, 40, 50]`
+
+the inputs and targets are:
+
+```
+x = [10, 20, 30, 40]y = [20, 30, 40, 50]
+```
+
+Every input token is paired with the next token in the original sequence.
+
+For a batch size \\(B\\) and sequence length \\(T\\), the data loader reads \\(B\times T+1\\) tokens.
+
+```
+x = buf[:-1].view(B, T)y = buf[1:].view(B, T)
+```
+
+The extra token is necessary to provide the correct prediction target for the final position in the batch.
+
+The model receives `x` with shape `(B, T)` and produces logits with shape `(B, T, V)`, where \\(V\\) is the vocabulary size.
+
+### 4.3 Cross-entropy loss
+
+The objective is to maximize the probability of the correct next token.
+
+Equivalently, minimize cross-entropy:
+
+\\[ \mathcal L= -\frac{1}{BT} \sum\_{i=1}^{B}\sum\_{t=1}^{T} \log P\_\theta(y\_{i,t}\mid x\_{i,\leq t}) \\]
+
+In PyTorch:
+
+```
+loss = F.cross_entropy(    logits.view(-1, logits.size(-1)),    targets.view(-1))
+```
+
+The logits are flattened from `(B, T, V)` to `(B*T, V)` and the targets from `(B, T)` to `(B*T)`.
+
+A randomly initialized model producing roughly uniform token probabilities should have an initial cross-entropy close to:
+
+\\[ \mathcal L_0\approx\ln(50257)\approx10.82 \\]
+
+An initial loss near this value is a useful sanity check.
+
+### 4.4 Testing whether the model can overfit one batch
+
+One of the most useful debugging techniques in the tutorial is intentionally training on the same small batch repeatedly.
+
+The expected behavior is that training loss rapidly approaches zero.
+
+This verifies that the forward pass, loss calculation, gradient computation, and optimizer are working together.
+
+After this check, Karpathy introduces a simple sequential data loader that returns fresh batches.
+
+When training with new batches, loss should decrease over time without immediately approaching zero.
+
+### 4.5 The basic optimization loop
+
+```
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)for step in range(max_steps):    x, y = train_loader.next_batch()    x, y = x.to(device), y.to(device)    optimizer.zero_grad(set_to_none=True)    logits, loss = model(x, y)    loss.backward()    optimizer.step()
+```
+
+The key operations are:
+
+- `zero_grad()` clears previously accumulated gradients.
+- `model(x, y)` calculates predictions and loss.
+- `loss.backward()` computes and accumulates gradients.
+- `optimizer.step()` updates model parameters.
+
+PyTorch accumulates gradients by default. Forgetting to clear them causes unintended gradient accumulation across optimization steps.
+
+Device placement also matters: model parameters and input tensors must reside on compatible devices, such as the same CUDA GPU.
+
+## 5. Weight tying and correct initialization
+
+### 5.1 Sharing embedding and output weights
+
+GPT-2 uses the same weight matrix for the input token embeddings and the output language-model classifier.
+
+Both are associated with a matrix of shape:
+
+\\[ 50257\times768 \\]
+
+Rather than learning two independent matrices, they share the same underlying parameters.
+
+Conceptually:
+
+```
+self.transformer.wte = nn.Embedding(vocab_size, n_embd)self.lm_head = nn.Linear(n_embd, vocab_size, bias=False)self.lm_head.weight = self.transformer.wte.weight
+```
+
+This has two main benefits:
+
+1. Reduces the number of independent parameters by approximately 38.6 million.
+2. Introduces an inductive bias that input and output token representations should share semantic structure.
+
+Both the input embedding lookup and the output projection contribute gradients to the shared weights.
+
+Important: Weight tying requires actual parameter sharing, not just initializing two matrices with the same numerical values.
+
+### 5.2 GPT-2 initialization
+
+The tutorial reproduces GPT-2's initialization conventions using information from the released source code.
+
+| Parameter type      | Initialization                  |
+| ------------------- | ------------------------------- |
+| Linear weights      | Normal distribution, std = 0.02 |
+| Linear biases       | Zero                            |
+| Token embeddings    | Normal distribution, std = 0.02 |
+| Position embeddings | GPT-2 source uses std = 0.01    |
+| LayerNorm scale     | One                             |
+| LayerNorm bias      | Zero                            |
+
+Karpathy simplifies his implementation by initializing both token and positional embeddings with standard deviation 0.02.
+
+This is an approximation rather than an exact reproduction of the original positional-embedding initialization.
+
+### 5.3 Residual projection scaling
+
+Repeated residual additions can increase the variance of activations as network depth grows.
+
+GPT-2 compensates by scaling the initialization of residual-output projection weights.
+
+For a model with \\(L\\) Transformer blocks, there are \\(2L\\) residual additions: one for attention and one for the MLP in each block.
+
+The scaled initialization is:
+
+\\[ \sigma\_{\mathrm{residual}} = 0.02(2L)^{-1/2} \\]
+
+For 12 layers:
+
+\\[ \sigma\_{\mathrm{residual}}\approx0.00408 \\]
+
+This prevents the variance of the residual stream from growing excessively at initialization, making optimization more stable.
+
+## 6. Optimizing GPU training performance
+
+This is one of the central sections of the tutorial.
+
+Karpathy emphasizes that maximizing performance is not simply about reducing the mathematical number of operations. GPU performance is often constrained by memory bandwidth, kernel launch overhead, and data movement.
+
+A well-optimized GPU workload can still have idle compute units because data cannot be supplied quickly enough.
+
+The optimization process starts with straightforward PyTorch training and gradually introduces several techniques.
+
+Illustrative single-GPU throughput progression from the tutorial
+
+03006009001,200BaselineTF32 + BF16Compiled + optimized attentionPadded vocabulary
+
+Approximate measured iteration times at successive optimization stages. Lower is better; these are workload-specific results.
+
+The progression reaches approximately an 11× reduction in iteration time, from around 1,000 ms to 93 ms, before scaling out to multiple GPUs.
+
+These are measurements from the tutorial, not guaranteed speedups across all GPU configurations.
+
+### 6.1 Reduced numerical precision: TF32 and BF16
+
+A100 GPUs support specialized Tensor Cores that can perform matrix operations substantially faster at lower numerical precision.
+
+The tutorial discusses three important formats.
+
+| Format | Main property                                                                 | Training relevance                                   |
+| ------ | ----------------------------------------------------------------------------- | ---------------------------------------------------- |
+| FP32   | 32-bit floating-point arithmetic                                              | Standard baseline                                    |
+| TF32   | Reduced multiplication precision with FP32-compatible inputs and accumulation | Faster matrix multiplication                         |
+| BF16   | 16-bit floating-point representation with FP32-like exponent range            | Reduced memory usage and high Tensor Core throughput |
+
+TF32: PyTorch can use reduced-precision multiplication internally while preserving FP32 tensors at the interface. This improves matrix-multiplication throughput without requiring a major code rewrite.
+
+BF16: Uses fewer bits for the significand while retaining the broad numerical range of FP32. This makes it attractive for neural-network training.
+
+Karpathy uses PyTorch automatic mixed precision:
+
+```
+with torch.autocast(device_type="cuda", dtype=torch.bfloat16):    logits, loss = model(x, y)
+```
+
+PyTorch determines which operations execute at BF16 or higher precision.
+
+Unlike FP16 training, BF16 typically does not require gradient scaling because its exponent range is substantially larger.
+
+The trade-off is reduced numerical precision, which is generally acceptable for the language-model training demonstrated.
+
+### 6.2 `torch.compile()` and kernel fusion
+
+PyTorch normally executes operations through separate computational kernels.
+
+For example, a chain of elementwise operations may require repeatedly reading tensors from GPU memory and writing intermediate results back.
+
+`torch.compile()` can analyze a computation and combine compatible operations into fewer kernels.
+
+```
+model = torch.compile(model)
+```
+
+This process, called kernel fusion, can improve performance because it reduces memory traffic and launch overhead.
+
+The important insight is that data movement can be more expensive than arithmetic.
+
+However, compilation is not guaranteed to optimize every operation, and the tutorial encounters compatibility issues with generation after compiling the model.
+
+### 6.3 FlashAttention
+
+Standard attention involves several operations:
+
+1. Calculate \\(QK^\top\\).
+2. Apply causal masking.
+3. Apply softmax.
+4. Multiply attention probabilities by \\(V\\).
+
+A straightforward implementation may materialize a large attention matrix in GPU memory.
+
+For sequence length \\(T\\), this matrix has \\(T^2\\) elements per head and batch item.
+
+FlashAttention changes how attention is computed, using tiling and an online softmax algorithm to avoid materializing the full attention matrix in high-bandwidth GPU memory.
+
+Its key advantage is not necessarily fewer arithmetic operations. It is much more efficient memory access.
+
+Karpathy replaces the manual attention implementation with:
+
+```
+y = F.scaled_dot_product_attention(    q, k, v,    is_causal=True)
+```
+
+On compatible PyTorch and GPU configurations, this can dispatch to an optimized FlashAttention backend.
+
+The result is faster execution and lower memory pressure, especially for longer sequences.
+
+### 6.4 Vocabulary-size padding
+
+GPT-2 has a vocabulary size of 50,257, which is inconvenient for some GPU kernels because it does not align well with common hardware tile sizes.
+
+Karpathy pads the model vocabulary to:
+
+\\[ V\_{\mathrm{padded}}=50304 \\]
+
+The tokenizer still produces IDs for the original 50,257 tokens; the additional output classes are unused.
+
+Although this slightly increases the number of computations, it can make matrix operations faster by improving hardware alignment.
+
+He observes about a 4% speed improvement with his PyTorch nightly build and notes that older configurations can experience substantially larger improvements.
+
+General principle: Hardware-friendly tensor dimensions can outperform mathematically smaller but poorly aligned dimensions.
+
+## 7. Reproducing GPT-3 training hyperparameters
+
+Because the GPT-2 paper does not fully specify the training procedure, Karpathy borrows many settings from the GPT-3 paper, whose architecture is similar.
+
+### 7.1 AdamW optimizer
+
+The tutorial uses AdamW rather than ordinary stochastic gradient descent.
+
+AdamW maintains estimates of the first and second moments of gradients, allowing adaptive parameter updates.
+
+The adopted settings are:
+
+| Hyperparameter                | Value |
+| ----------------------------- | ----- |
+| Optimizer                     | AdamW |
+| β₁                            | 0.9   |
+| β₂                            | 0.95  |
+| Epsilon                       | 1e-8  |
+| Weight decay                  | 0.1   |
+| Maximum learning rate         | 6e-4  |
+| Global gradient norm clipping | 1.0   |
+
+Weight decay is applied selectively.
+
+Karpathy separates trainable parameters into groups:
+
+- Matrix-like weights, which receive weight decay.
+- Biases and other lower-dimensional parameters, which do not.
+
+This prevents regularization from being applied indiscriminately to all model parameters.
+
+### 7.2 Gradient clipping
+
+Very large gradients can destabilize training.
+
+Global gradient clipping constrains the total gradient norm:
+
+\\[ \lVert g\rVert_2\leq1 \\]
+
+In PyTorch:
+
+```
+torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+```
+
+Clipping occurs after backpropagation and before the optimizer step.
+
+Monitoring the gradient norm is also useful for identifying unstable training, unexpected spikes, and problematic data batches.
+
+### 7.3 Learning-rate scheduling
+
+Instead of using a fixed learning rate, the tutorial implements:
+
+- Linear learning-rate warmup.
+- Cosine learning-rate decay.
+- A minimum learning rate of 10% of the maximum.
+
+The schedule conceptually resembles:
+
+During warmup, the learning rate gradually increases. This avoids applying excessively large parameter updates early in training.
+
+After warmup, cosine decay progressively reduces the step size.
+
+For the 10-billion-token training run, the warmup corresponds to approximately 375 million tokens, or 715 optimization steps at the selected effective batch size.
+
+The learning-rate schedule is tied to the number of training steps and tokens processed, not simply elapsed wall-clock time.
+
+## 8. Gradient accumulation and effective batch size
+
+Large language models benefit from large token batches, but fitting the entire batch into GPU memory may be impossible.
+
+Gradient accumulation solves this by splitting one large optimization batch into smaller microbatches.
+
+Instead of updating the model after each microbatch, gradients are accumulated across several microbatches before one optimizer update.
+
+The effective batch size in tokens is:
+
+\\[ N\_{\mathrm{tokens}}= B\times T\times A\times G \\]
+
+where:
+
+- \\(B\\): microbatch size per GPU.
+- \\(T\\): sequence length.
+- \\(A\\): gradient accumulation steps.
+- \\(G\\): number of GPUs.
+
+For example, with a microbatch of 16, sequence length 1,024, eight accumulation steps, and four GPUs:
+
+\\[ 16\times1024\times8\times4=524288 \\]
+
+This matches the approximately half-million-token effective batch size used in the tutorial.
+
+To maintain the same gradient scale, the loss from each microbatch is divided by the number of accumulation steps before backpropagation.
+
+```
+optimizer.zero_grad(set_to_none=True)for micro_step in range(grad_accum_steps):    x, y = train_loader.next_batch()    x, y = x.to(device), y.to(device)    with torch.autocast("cuda", dtype=torch.bfloat16):        logits, loss = model(x, y)    loss = loss / grad_accum_steps    loss.backward()torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)optimizer.step()
+```
+
+Key distinction: Microbatch size determines the activation-memory requirements of an individual forward/backward pass, while effective batch size determines how much data contributes to one parameter update.
+
+## 9. Multi-GPU training with Distributed Data Parallel
+
+The tutorial scales training to eight NVIDIA A100 80GB GPUs.
+
+Karpathy uses PyTorch Distributed Data Parallel (DDP).
+
+The basic structure is one process per GPU, with each process maintaining a model replica and processing different training examples.
+
+### 9.1 How DDP works
+
+Each GPU:
+
+1. Receives a separate portion of training data.
+2. Computes its own forward pass and loss.
+3. Computes gradients locally.
+4. Participates in collective gradient synchronization.
+5. Applies the same optimizer update.
+
+DDP averages gradients across processes so model replicas remain synchronized.
+
+Training is launched through `torchrun`, which assigns ranks to participating processes.
+
+An important detail is adjusting the data loader so each GPU processes different segments of the dataset. Otherwise, GPUs would duplicate computation without increasing the amount of information processed.
+
+### 9.2 Avoiding unnecessary gradient synchronization
+
+When using gradient accumulation, synchronizing gradients after every microbatch causes unnecessary communication overhead.
+
+Only the final microbatch of the optimization step needs to trigger cross-GPU gradient synchronization.
+
+The tutorial explicitly disables synchronization on earlier accumulation steps.
+
+This reduces communication costs while preserving the desired effective batch size.
+
+### 9.3 Distributed training throughput
+
+After applying the single-GPU optimizations and DDP, the tutorial reaches approximately:
+
+Training throughput
+
+# 1.5M
+
+Tokens per second across 8 GPUs
+
+Optimization step
+
+# \~330 ms
+
+For \~524K effective tokens
+
+Using more GPUs does not eliminate the need for performance engineering, but it allows the same effective batch to be processed in less wall-clock time.
+
+## 10. Training on FineWeb-Edu
+
+### 10.1 Why data quality matters
+
+Tiny Shakespeare is suitable for debugging but far too small to train a general-purpose language model.
+
+The tutorial discusses how language models are typically trained on mixtures of text sources, including web pages, books, Wikipedia, code, and other curated corpora.
+
+Raw Common Crawl data contains substantial amounts of noise, duplicated text, low-quality content, and irrelevant pages.
+
+High-quality pretraining therefore requires filtering, deduplication, and careful dataset preparation.
+
+Karpathy selects Hugging Face's FineWeb-Edu, a filtered dataset emphasizing educational web content.
+
+He uses a 10-billion-token sample rather than the complete dataset.
+
+### 10.2 Data preparation
+
+The preprocessing pipeline is:
+
+1. Download the selected FineWeb-Edu sample.
+2. Tokenize text using the GPT-2 tokenizer.
+3. Store tokenized data in NumPy-format shards.
+4. Load shards sequentially during training.
+5. Maintain separate training and validation splits.
+
+The processed dataset contains approximately 100 shards, each with 100 million tokens.
+
+Sharding prevents the training process from requiring the entire dataset to be loaded into memory.
+
+### 10.3 Training configuration
+
+| Setting                        | Approximate value      |
+| ------------------------------ | ---------------------- |
+| Model                          | GPT-2 124M             |
+| Training data                  | FineWeb-Edu 10B sample |
+| Sequence length                | 1,024                  |
+| Tokens per optimizer step      | 524,288                |
+| Optimizer steps per 10B tokens | \~19,073               |
+| GPUs                           | 8 × A100               |
+| Total training time            | \~1.7–2 hours          |
+
+The model starts from random initialization rather than pretrained GPT-2 weights.
+
+Training loss and validation loss are measured separately to detect overfitting and evaluate generalization.
+
+Karpathy also evaluates the original GPT-2 checkpoint on the same validation distribution for comparison.
+
+However, this comparison is not fully controlled because the original GPT-2 and the reproduced model were trained on different text corpora.
+
+## 11. Evaluating the model
+
+The tutorial uses two complementary forms of evaluation.
+
+### 11.1 Validation cross-entropy
+
+Validation loss measures how well the model predicts next tokens on held-out data.
+
+Lower loss indicates better probability assignments to the correct tokens.
+
+Training and validation loss curves are monitored throughout optimization.
+
+Karpathy's reproduced model achieves lower validation loss than the original GPT-2 124M checkpoint when both are evaluated on FineWeb-Edu validation text.
+
+This is encouraging but does not establish superiority across all tasks or data distributions.
+
+### 11.2 HellaSwag benchmark
+
+HellaSwag is a multiple-choice sentence-completion benchmark designed to test whether models identify plausible continuations of everyday situations.
+
+Each example presents a context and four candidate completions.
+
+The evaluation computes each candidate's conditional likelihood, using the completion-token losses to score the options.
+
+The model chooses the completion with the lowest average cross-entropy, equivalent to the highest average log-probability per completion token.
+
+For a four-choice problem, random guessing achieves 25% accuracy.
+
+The tutorial uses HellaSwag because it provides a standardized downstream evaluation beyond raw validation loss.
+
+### 11.3 Results after 10 billion tokens
+
+Following approximately one epoch over the FineWeb-Edu sample:
+
+- The model substantially improves over the random baseline.
+- It surpasses the original GPT-2 124M checkpoint on the HellaSwag evaluation shown.
+- Generated text becomes more coherent and contextually meaningful.
+- The model achieves these results after processing substantially fewer tokens than the original GPT-2 training run.
+
+The tutorial compares approximately 10 billion training tokens with the roughly 100 billion tokens used for GPT-2.
+
+Karpathy does not attribute this difference to one definitive cause.
+
+Possible contributing factors include improved data quality, differing data distributions, and differences in training optimization.
+
+He also raises the possibility of benchmark contamination, since HellaSwag examples or related content could potentially overlap with newer web-derived training corpora.
+
+### 11.4 Extended training: 40 billion tokens
+
+Karpathy subsequently extends training to approximately 40 billion processed tokens, corresponding to four passes over the 10-billion-token sample.
+
+This longer run produces:
+
+Reported HellaSwag accuracy after extended training
+
+# 33.24%
+
+Versus 25% random-choice baseline
+
+The model approaches the performance of a comparable small GPT-3 checkpoint on the benchmark, despite using fewer training tokens than the GPT-3 run referenced in the tutorial.
+
+Generated text also becomes noticeably more coherent after extended training.
+
+However, this is not a universally transferable claim of a tenfold improvement in data efficiency; it is an observation under the tutorial's particular evaluation and dataset choices.
+
+## 12. Limitations and unresolved issues
+
+Karpathy identifies several issues that remain open in his implementation.
+
+Data ordering and shuffling. The data loader traverses tokenized shards in a fixed order. Repeating the same examples in exactly the same order across epochs creates undesirable correlations. Ideally, documents and shards should be shuffled between epochs.
+
+Unusual loss fluctuations. The loss curve exhibits periodic patterns that may be related to the ordering of FineWeb-Edu shards. Karpathy suspects the data-loading strategy but does not definitively resolve the issue.
+
+Compilation and generation. Enabling `torch.compile()` creates problems with text generation in the demonstrated implementation. Training can continue, but generating samples requires a workaround or further debugging.
+
+Hyperparameter tuning. The GPT-3 learning rate and other settings are reproduced for convenience, not proven to be optimal. Karpathy notes that a larger maximum learning rate may work and potentially improve convergence speed.
+
+GPT-3 context length. The comparable GPT-3 architecture uses a 2,048-token context instead of GPT-2's 1,024. Matching this requires increasing sequence length and adjusting batch dimensions to preserve the desired effective token batch.
+
+Benchmark validity. Comparisons across models trained on different datasets are inherently limited, and potential test-data overlap must be considered.
+
+## 13. Comparing PyTorch with `llm.c`
+
+Near the end, Karpathy introduces `llm.c`, a lower-level GPT training implementation using C/CUDA.
+
+He compares it against the optimized PyTorch version.
+
+The two implementations produce matching losses and gradient norms when configured equivalently, providing an additional correctness check.
+
+In the comparison shown:
+
+| Implementation    | Throughput, approximately |
+| ----------------- | ------------------------- |
+| Optimized PyTorch | 185,000 tokens/s          |
+| `llm.c`           | 223,000 tokens/s          |
+
+`llm.c` also starts training faster because its compilation workflow is more specialized.
+
+The trade-off is that PyTorch is a general-purpose neural-network framework, whereas `llm.c` is optimized for a much narrower family of GPT-style models.
+
+The result illustrates that specialized low-level implementations can outperform general frameworks when maximum throughput is the priority.
+
+## 14. Most important engineering lessons
+
+The tutorial ultimately teaches a methodology for building and training language models, rather than just reproducing one particular checkpoint.
+
+| Principle                                 | Why it matters                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Validate architecture before training     | Pretrained weights provide a reference implementation for correctness |
+| Overfit one batch first                   | Reveals bugs in the forward pass, loss, gradients, and optimizer      |
+| Match initialization carefully            | Prevents unstable activation and gradient behavior                    |
+| Tie input and output embeddings           | Reduces parameter count and introduces useful structural assumptions  |
+| Measure hardware utilization              | GPU performance depends on memory behavior as well as arithmetic      |
+| Use mixed precision                       | Improves computational throughput and reduces memory pressure         |
+| Compile operations and use FlashAttention | Reduces kernel overhead and costly memory transfers                   |
+| Align tensor shapes with hardware         | Padding can make computations faster even when it increases FLOPs     |
+| Use gradient accumulation                 | Enables large effective batches on limited GPU memory                 |
+| Use DDP for multi-GPU scaling             | Distributes computation while coordinating gradients                  |
+| Prioritize dataset quality                | Clean, relevant data can materially improve learning efficiency       |
+| Evaluate beyond training loss             | Validation and downstream benchmarks expose different failure modes   |
+
+## 15. Final synthesis
+
+The full process demonstrated in the video can be summarized as:
+
+1. Reconstruct GPT-2. Implement embeddings, 12 Transformer blocks, causal multi-head attention, MLPs, layer normalization, residual connections, and the output head.
+2. Verify correctness. Load the pretrained GPT-2 124M weights and confirm that the custom implementation behaves like the reference model.
+3. Train from scratch. Use next-token cross-entropy, AdamW, correct initialization, weight tying, and a small debugging dataset.
+4. Optimize throughput. Introduce TF32/BF16, `torch.compile()`, FlashAttention, and hardware-friendly vocabulary padding.
+5. Scale training. Reproduce GPT-3-inspired optimization settings and use gradient accumulation and DDP for multi-GPU execution.
+6. Train and evaluate. Process billions of FineWeb-Edu tokens, track validation loss, measure HellaSwag accuracy, and compare performance against historical GPT checkpoints.
+
+The central takeaway is that language-model training is a combination of model architecture, numerical optimization, systems engineering, and data engineering.
+
+The Transformer itself is relatively compact and can be implemented in roughly a hundred lines of model code. The harder challenge is ensuring that it is initialized correctly, trained efficiently, supplied with sufficiently good data, and evaluated rigorously.
+
+Karpathy demonstrates that a small historical language model can be reproduced using modern hardware and software techniques with a modest amount of compute compared with its original development, while also showing why results must be interpreted carefully when training datasets and evaluation conditions differ.

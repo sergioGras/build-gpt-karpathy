@@ -51,10 +51,16 @@ This lab is a future capability, not an implemented feature. Provider selection,
 
 The [remote-compute plan](docs/remote-compute-plan.md) adapts a RunPod workflow playbook to this tutorial and maps the next architecture lessons to a bounded first GPU experiment.
 
-## First tutorial
+## Tutorial 1 — complete
 
 The first tutorial follows Karpathy's *Let's build GPT: from scratch, in code, spelled out*, progressing from Tiny Shakespeare and character encoding to a bigram model, causal self-attention, and a decoder-only Transformer.
 
 The reference notebook is [gpt-1/gpt_dev.ipynb](gpt-1/gpt_dev.ipynb).
 
 To run the C or Java version a step at a time in VS Code, use **Terminal → Run Task → Run tutorial lesson**. The [lesson guide](gpt-1/README.md#run-lessons-by-step) maps each step to the notebook and both projects.
+
+The guided path has fourteen lessons. Python covers training the complete small decoder. C and Java cover the decoder forward pass and generation, with explicit gradient and optimizer calculations in the bigram lesson; full Transformer backpropagation is outside this tutorial's C and Java implementations.
+
+## Tutorial 2 — GPT-2 reproduction
+
+The next track follows Karpathy's [*Let's reproduce GPT-2 (124M)*](https://www.youtube.com/watch?v=l8pRSuU81PU). Its upstream code checkout is in [gpt-2/build-nanogpt](gpt-2/build-nanogpt/README.md); the guided lessons will be documented alongside it in [gpt-2/README.md](gpt-2/README.md).

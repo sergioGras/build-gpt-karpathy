@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "karpathy-gpt2-lab"
+version = "0.1.0"
+description = "Readable GPT-2 lessons and experiments in Python, C, and Java"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+notebooks = ["ipykernel>=6.29,<8"]
+
+[project.scripts]
+gpt2-lab = "gpt2_lab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

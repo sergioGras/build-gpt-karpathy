@@ -1,0 +1,4 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/python/.venv/Scripts/python.exe",
+  "cmake.sourceDirectory": "${workspaceFolder}/c"
+}
